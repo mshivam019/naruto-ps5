@@ -6,8 +6,8 @@ No deployment or console test has occurred.
 
 ## Prepared artifact
 
-`dist/PPSA99680`: 108 files, 4757531820 bytes, source/destination SHA-256 verified.
-Signed eboot SHA-256: `c3895b3c98d261ccca32910fb8232919e88359e7b018151354191f6b959c7355`.
+`dist/PPSA99680`: 108 files, 4736922828 bytes, source/destination SHA-256 verified.
+Current local eboot SHA-256: `e84ff472776b2ecdcaf14e7018f82a08abf94d06fce246a35695f25721e20b21`.
 This entire title is private: it includes generated game code and disc assets.
 
 ## Validation completed
@@ -34,3 +34,27 @@ Successful compilation is not evidence of a playable port or a performance claim
 
 Build log: `evidence/ps5-full-build.log`; package receipt:
 `evidence/local-package.json`; dependency hashes: `evidence/native-dependencies.json`.
+
+## First console attempt
+
+User connected console and authorized testing. Console idle, FTP/control reachable.
+All 108 files transferred to M.2; stored sizes checked and executable/libc/param
+verified through raw SHA-256. Registration returned PPSA99680 successfully.
+Launch control connection closed without a response; afterward FTP, control and
+Payload Manager were unreachable. No boot/gameplay result was captured. Cause
+unknown; awaiting user observation. Do not retry launch blindly. Receipts:
+`evidence/console-deployment.json`, `evidence/first-boot-result.json`.
+
+## Layout correction prepared after shutdown
+
+User confirmed power-off/reboot during the first launch. Local inspection found
+overlapping executable/readonly/RELRO LOAD ranges in the initial converted ELF.
+Large-code sections and the libc++ `__lcxx_override` executable section were
+not explicitly placed by the inherited linker script. A project-local layout
+now places them in the proper segments. Intermediate and converted ELF checks
+pass; the new validator rejects the original binary and runs before signing.
+This is a confirmed layout defect, not a confirmed shutdown root cause.
+Corrected SELF remains local and is reflected in `dist/PPSA99680` and its receipt.
+Console still holds the first candidate. Wait for recovery before deployment;
+back up the installed executable, upload only the replacement, raw-hash verify
+and collect klog concurrently BEFORE sending a new launch request.

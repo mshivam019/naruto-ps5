@@ -5,8 +5,8 @@ Read `PLAN.md` first, then `../AGENTS.md` for shared console instructions.
 The user requests a playable native Naruto port using existing templates.
 A signed local candidate exists; gameplay is unverified. The correct Xbox 360
 base dump is prepared privately; the older MUGEN ZIP is unrelated.
-Latest instruction: keep building locally and tell the user when ready. They
-will connect the console afterward. Do not contact or deploy to the PS5 yet.
+User has now connected the console for installation and testing. The earlier
+local-only hold is superseded. Preserve unrelated titles and saves.
 
 Keep source modifications, build outputs and receipts isolated in this folder.
 Do not modify working sibling ports or update console payloads for this project.

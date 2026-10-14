@@ -51,6 +51,9 @@ export RADV_LOCAL_MAP="$work/link/radv-platform-local.map"
 # shellcheck source=/dev/null
 source "$recipe"
 radv_link_recipe "$vulkan" "$sdk" "$archive" || exit 2
+# ReXGlue uses the large code model; collect .ltext/.ldata/.lrodata/.lbss
+# explicitly instead of letting orphan sections inherit the wrong segment.
+radv_linker_script=(-T "$ps5/native/ps5-pie.ld")
 # localeconv in the C locale, '.' the decimal point (the console's gives none, and
 # tinygltf's JSON parser then read 0.62 as 0): the platform layer's since SDK fork
 # fa69d00 (tools/setup-sdk.sh's pin is never older), bound by PS5_Vulkan's recipe
@@ -101,6 +104,8 @@ fi
     --stub "$work/link/stubs/libSceAgcDriver.so" --module-sdk 0x02000009 \
     --companion-sdk 0x08050001 --file-name eboot.elf
 
+
+python3 "$ps5/tools/validate-elf-layout.py" "$work/link/llvm-pie.elf" "$work/eboot.elf.new"
 
 "$tool" self --sign --in "$work/eboot.elf.new" --out "$work/eboot.bin" --magic 0x1D3D154F
 "$tool" self --inspect --file "$work/eboot.bin" > /dev/null
