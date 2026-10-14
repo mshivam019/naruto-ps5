@@ -9,7 +9,9 @@ is running for manual testing; preserve it while the user plays.
 
 User confirms a visible picture, normal speed, working Start, gameplay, movement
 and audible audio after fixes. This is a user-confirmed playable console build.
-Specific combat/camera checks, save/reload and clean exit remain unverified.
+Specific combat/camera checks and clean exit remain unverified. Save creation and PlayerSave1 reload are now user-confirmed after the
+case-insensitive content lookup fix. Existing Autosave and KonohaAutosave both
+mount and read successfully in logs. A fresh autosave/reload cycle is unverified.
 Do not call this a fully validated release or claim a frame rate.
 
 Current installed and staged executable SHA-256:
@@ -50,8 +52,16 @@ touchpad=Back. Gameplay mappings still need physical verification.
 
 ## Remaining constraints
 
-Shader disk storage initialization stalled during earlier testing. The packaged
-PS5 defaults keep `store_shaders=false`; runtime shader compilation may pause.
+User subsequently reports smooth rendering but sluggish movement. Cause is not
+yet established; the earlier normal-speed confirmation covered startup playback.
+Source inspection shows full-range stick conversion; live stick magnitude and
+gameplay frame pacing have not been measured. Sprint is R2 and story-unlocked.
+No timing or live configuration changes were made in response to this report.
+
+Shader disk storage previously stalled. After preparing cache/shaders/shareable
+before launch, store_shaders=true starts and writes cache files. A subsequent
+restart preloaded 45/45 cached graphics pipelines. This proves persistence, not
+elimination of all stutters. New local startup prepares these directories.
 Current console logging is info/noisy=false. Prior config and executable versions
 are backed up on the console. Do not replace live files or overwrite saves.
 Physical-memory free warnings remain in runtime logs; investigate if memory
@@ -74,3 +84,24 @@ usage grows or gameplay fails. No broad compatibility or performance claim.
   `python3 ps5/tools/build-title.py --jobs 4`. Source pins are in PLAN.md.
 
 Sibling ports, the shared SDK, payload stack and original assets are preserved.
+
+## Current diagnostic session
+
+User clarified speed is fine; intermittent choppiness remains. Save validation
+takes priority before another gameplay comparison. Original manual save and
+autosaves are backed up privately in evidence/save-backup-before-performance.
+Manual Save.dat is 262144 bytes with nonempty UBISG data, SHA256
+8462415f0be836a59342a76c4e0c31f4b41578d062606a816baafb3ff0d2e22f.
+No save bytes changed by the agent.
+
+Installed diagnostic executable (supersedes hash above):
+ce709c600c525834411591d4cff3395c94681a9adcc922473b5f620679dff6b6.
+Raw readback verified, rollback eboot.bin.before-save-case. It logs Save.dat
+read offsets, lengths and FNV-1a byte hashes at info level; full trace disabled.
+Console config has store_shaders=true. Latest diagnostic proved lowercase requested content folders do not match the
+stored mixed-case names. XamContentCreate returned path-not-found (3), before
+any save bytes were read. Installed fix resolves the existing content folder
+and header by ASCII case-insensitive leaf matching. Save data is untouched.
+Host mixed-case open/header/missing-path tests pass under ASan/UBSan. Runtime
+patch exported and reverse-apply verified. User confirms PlayerSave1 restores progress. Full reads return success for all
+three saved packages. Choppiness comparison remains pending.

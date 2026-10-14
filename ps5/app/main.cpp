@@ -92,6 +92,10 @@ int main() {
         double(tick_elapsed) / double(tick_frequency));
     mkdir("/app0/user", 0777);
     mkdir("/app0/user/cache", 0777);
+    // Prepare the full persistent shader path before the GPU worker starts.
+    // Avoid recursive directory creation during shader storage initialization.
+    mkdir("/app0/user/cache/shaders", 0777);
+    mkdir("/app0/user/cache/shaders/shareable", 0777);
     SDL_Environment* environment = SDL_GetEnvironment();
     SDL_SetEnvironmentVariable(environment, "SDL_VIDEODRIVER", "dummy", true);
     SDL_SetEnvironmentVariable(environment, "SDL_AUDIODRIVER", "ps5", true);

@@ -1,5 +1,5 @@
-# PS5 defaults. Disk shader storage initialization remains under investigation.
-store_shaders = false
+# PS5 defaults. Keep compiled shader descriptions between sessions.
+store_shaders = true
 log_level = "info"
 log_noisy = false
 log_flush_interval = 1

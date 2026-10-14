@@ -14,10 +14,12 @@ with 1216 bytes (mc_len=1152). A locally padded context and PS5 fiber stack
 initialization fix is deployed. Three fiber round trips passed and the user
 confirmed that the picture is visible. The follow-up timing/audio build fixes
 an 81x clock scaling error and execute-only FFT table access; the user confirms
-normal speed, working Start, gameplay, movement and audio. Save/reload and clean
-exit checks are pending. Preserve
-the running test session. Disk shader
-storage is temporarily disabled while its separate startup stall is investigated.
+normal speed, working Start, gameplay, movement and audio. Save creation succeeded but reload reported damaged: diagnostics found lowercase
+content requests against mixed-case stored paths. Candidate ce709c6 resolves
+content folders and headers case-insensitively; sanitizer tests pass and user confirms PlayerSave1 reload. Clean exit remains unverified. Persistent shader storage now works after
+preparing its directory tree; a restart preloaded 45/45 stored pipelines. User
+reports intermittent choppiness, not incorrect game speed; gameplay improvement
+is not yet confirmed. Preserve the current manual test session.
 Evidence is private under `evidence/`; console rollback executables are retained.
 No release is ready. See ps5/CURRENT_STATUS.md for previous build details; its
 local-only and layout-not-deployed statements are superseded by this entry.
