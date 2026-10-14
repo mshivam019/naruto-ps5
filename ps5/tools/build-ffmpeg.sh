@@ -14,6 +14,13 @@ if [[ ! -f "$source_dir/configure" ]]; then
     # Upstream checks in a host config header; out-of-tree configure needs it absent.
     rm "$source_dir/config.h"
 fi
+patch_file="$root/ps5/patches/ffmpeg-readable-fft-tables.patch"
+if git -C "$source_dir" apply --check "$patch_file" 2>/dev/null; then
+    git -C "$source_dir" apply "$patch_file"
+elif ! git -C "$source_dir" apply --reverse --check "$patch_file" 2>/dev/null; then
+    echo "FFmpeg FFT table patch does not match the pinned source" >&2
+    exit 1
+fi
 mkdir -p "$build"
 cd "$build"
 "$source_dir/configure" --prefix="$build/install" \

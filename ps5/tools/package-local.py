@@ -23,7 +23,8 @@ if not exe.is_file() or exe.stat().st_size < 1024:
     parser.error('A signed native eboot.bin must be built first')
 files = {'eboot.bin': exe,
          'sce_module/libc.prx': ROOT.parent / 'PS5_Vulkan/runtime/libc.prx',
-         'sce_sys/param.json': ROOT / 'ps5/sce_sys/param.json'}
+         'sce_sys/param.json': ROOT / 'ps5/sce_sys/param.json',
+         'user/narutorise.toml': ROOT / 'ps5/config/narutorise.toml'}
 for name in ('icon0.png', 'pic0.png', 'pic1.png'):
     source = ROOT / 'ps5/sce_sys' / name
     if source.is_file():

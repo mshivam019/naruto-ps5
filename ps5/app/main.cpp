@@ -3,6 +3,9 @@
 #include "narutorise_init.h"
 #include <SDL3/SDL.h>
 #include <rex/cvar.h>
+#include <rex/chrono/clock.h>
+#include <time.h>
+#include <rex/thread/fiber.h>
 #include <rex/logging.h>
 #include <rex/rex_app.h>
 #include <rex/ui/windowed_app_context_sdl.h>
@@ -40,8 +43,53 @@ public:
     }
 };
 
+struct FiberCheck {
+    rex::thread::Fiber* parent;
+    int step;
+};
+
+static void check_fiber_entry(void* arg) {
+    auto* check = static_cast<FiberCheck*>(arg);
+    for (int i = 1; i <= 3; i++) {
+        check->step = i;
+        rex::thread::Fiber::SwitchTo(check->parent);
+    }
+    std::abort();
+}
+
+static bool check_fibers() {
+    auto* parent = rex::thread::Fiber::ConvertCurrentThread();
+    if (!parent) return false;
+    FiberCheck check{parent, 0};
+    auto* child = rex::thread::Fiber::Create(256 * 1024, check_fiber_entry, &check);
+    if (!child) {
+        parent->Destroy();
+        return false;
+    }
+    bool passed = true;
+    for (int i = 1; i <= 3; i++) {
+        rex::thread::Fiber::SwitchTo(child);
+        if (check.step != i) passed = false;
+    }
+    child->Destroy();
+    parent->Destroy();
+    say("native fiber round-trip check: %s", passed ? "passed" : "failed");
+    return passed;
+}
+
 int main() {
     platform_init("Naruto: Rise of a Ninja");
+    if (!check_fibers()) return 1;
+    timespec clock_resolution{};
+    clock_getres(CLOCK_MONOTONIC, &clock_resolution);
+    const auto tick_start = rex::chrono::Clock::host_tick_count_platform();
+    const timespec clock_check_delay{0, 100000000};
+    nanosleep(&clock_check_delay, nullptr);
+    const auto tick_elapsed = rex::chrono::Clock::host_tick_count_platform() - tick_start;
+    const auto tick_frequency = rex::chrono::Clock::host_tick_frequency_platform();
+    say("clock check: resolution=%ld ns frequency=%llu elapsed=%.6f seconds",
+        clock_resolution.tv_nsec, static_cast<unsigned long long>(tick_frequency),
+        double(tick_elapsed) / double(tick_frequency));
     mkdir("/app0/user", 0777);
     mkdir("/app0/user/cache", 0777);
     SDL_Environment* environment = SDL_GetEnvironment();
@@ -50,8 +98,10 @@ int main() {
     char executable[] = "/app0/eboot.bin";
     char gpu[] = "--gpu_plugin=xenos";
     char video[] = "--video_driver=dummy";
-    char* arguments[] = {executable, gpu, video, nullptr};
-    rex::cvar::Init(3, arguments);
+    // Native-title sandboxes reject chdir; optional files use absolute paths.
+    char mappings[] = "--hid_mappings_file=/app0/gamecontrollerdb.txt";
+    char* arguments[] = {executable, gpu, video, mappings, nullptr};
+    rex::cvar::Init(4, arguments);
     rex::cvar::ApplyEnvironment();
     rex::InitLoggingEarly();
     try {

@@ -4,10 +4,22 @@ Updated 2026-10-14. Workspace: `/home/skm/Downloads/ps5/Naruto-Rise-PS5`.
 
 ## Current status (supersedes historical entries below)
 
-The complete signed local candidate is ready at `dist/PPSA99680`. See
-`ps5/CURRENT_STATUS.md` for verified results and pending hardware checks.
-Repository/title selection, correct input preparation and native compilation are
-complete. User will connect the PS5 after local completion; no console actions.
+Console testing is authorized for PPSA99680, including closing/restarting Naruto.
+Native startup reaches Vulkan initialization, XEX loading, controller detection
+and guest threads, and the user now confirms a visible game picture; gameplay is pending. The initial build
+powered off the console; corrected nonoverlapping ELF segments have avoided that
+in subsequent tests. Further startup fixes cover sandbox paths and PS5 thread
+resume semantics. The native exit was traced to getcontext overwriting a 928-byte SDK context
+with 1216 bytes (mc_len=1152). A locally padded context and PS5 fiber stack
+initialization fix is deployed. Three fiber round trips passed and the user
+confirmed that the picture is visible. The follow-up timing/audio build fixes
+an 81x clock scaling error and execute-only FFT table access; the user confirms
+normal speed and working Start. Gameplay/save/exit checks are pending. Preserve
+the running test session. Disk shader
+storage is temporarily disabled while its separate startup stall is investigated.
+Evidence is private under `evidence/`; console rollback executables are retained.
+No release is ready. See ps5/CURRENT_STATUS.md for previous build details; its
+local-only and layout-not-deployed statements are superseded by this entry.
 
 ## Objective and user decisions
 

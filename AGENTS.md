@@ -20,3 +20,6 @@ work proceeds. The intended runtime is native PS5 with Vulkan, without WebGPU.
 
 User now requests aiming directly for a playable build using existing native port templates.
 Host codegen succeeded for the correct Xbox 360 files; see PLAN.md latest entries.
+
+User explicitly authorizes closing/restarting Naruto during testing; do not ask
+them to close it manually. This does not authorize closing unrelated titles.
