@@ -7,9 +7,10 @@ is running for manual testing; preserve it while the user plays.
 
 ## Current result
 
-User confirms a visible picture, normal speed and working Start after fixes.
-Gameplay/movement, audible audio, combat/camera, save/reload and exit are pending.
-Do not call this a finished playable release or claim a frame rate.
+User confirms a visible picture, normal speed, working Start, gameplay, movement
+and audible audio after fixes. This is a user-confirmed playable console build.
+Specific combat/camera checks, save/reload and clean exit remain unverified.
+Do not call this a fully validated release or claim a frame rate.
 
 Current installed and staged executable SHA-256:
 `5263190965368395193c6ecadefc68a0547d10d199c242dedcb6e62f70a276e9`.
