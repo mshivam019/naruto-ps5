@@ -1,0 +1,12 @@
+Native platform.c/platform.h and native title link recipe derive from Mihawk's
+PS5 Vulkan Template (Copyright 2026 Mihawk, MIT). Controller SDL bridge reused
+from the local Wind-Waker-HD-PS5/Dusklight ports.
+
+ReXGlue and its Xenia-derived components retain their upstream BSD notices.
+The Naruto game-port upstream currently declares no root license; it is fetched
+locally at a pinned revision, not vendored into this repository.
+
+SDL3: zlib. Mesa/RADV: MIT and per-file licenses. PS5 PayloadSDK/platform:
+GPL-3.0-or-later with per-file exceptions. LLVM runtime: Apache-2.0 with LLVM
+exceptions. Preserve original dependency licenses and corresponding sources
+before any distribution. No compiled dependencies or game content are committed.

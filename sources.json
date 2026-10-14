@@ -1,0 +1,15 @@
+{
+  "naruto": "226af94268de3660c3de24061f9a6bf7ae982d3c",
+  "sdk": "c94f5ebdcb3c9d1a460ca48e04f9758448f8d518",
+  "extract_xiso": "3f5b62cfe68f000b0e3c8a30104973f3a297948e",
+  "patches": {
+    "codegen-alt-version-dll-modules.patch": "c95d22241df27003de131ab416502283edf3e851973274c85d49413443873919",
+    "guest-frame-stats.patch": "3110937ca703394a6d7e69899d78e1d1f687c8432dfa82bdf0490fcc4c6629b5",
+    "obdosdevices-relative-paths.patch": "f60ba5386bb4c800b4c6493f52fed38c3eb4dc1aa81aa273909174385b952934",
+    "physical-memory-trace.patch": "f83d99501b025da7eb4a9ebb08114fabb2ec78aedfc75b180a24bb05d539d5dc",
+    "ultrawide-presenter.patch": "fc9fc42476ddd5094ec39946aa2066a549f23cf96028e04af8bf398a580001fd",
+    "unclipped-draw-vs-on-cpu-default.patch": "fc96c5c679251aeda468b7a3bf7602f9cf553590ce080806b2046699cb16bbfa"
+  },
+  "naruto_root_license_present": false,
+  "console_contacted": false
+}

@@ -1,0 +1,15 @@
+upstream/
+.deps/
+build/
+dist/
+private-assets/
+game_root/
+logs/
+*.iso
+*.xex
+private/
+*.7z
+
+.scratch/
+__pycache__/
+evidence/
