@@ -19,7 +19,10 @@ content requests against mixed-case stored paths. Candidate ce709c6 resolves
 content folders and headers case-insensitively; sanitizer tests pass and user confirms PlayerSave1 reload. Clean exit remains unverified. Persistent shader storage now works after
 preparing its directory tree; a restart preloaded 45/45 stored pipelines. User
 reports intermittent choppiness, not incorrect game speed; gameplay improvement
-is not yet confirmed. Preserve the current manual test session.
+is not yet confirmed. Further instrumentation found pipeline storage stuck at
+45 entries: cache-append candidate 05b7c0d seeks update streams before writing
+and flushes without waiting for another item. Console cache growth verified
+(2982 to 23574 bytes), repeated-route comparison pending. Preserve the session.
 Evidence is private under `evidence/`; console rollback executables are retained.
 No release is ready. See ps5/CURRENT_STATUS.md for previous build details; its
 local-only and layout-not-deployed statements are superseded by this entry.

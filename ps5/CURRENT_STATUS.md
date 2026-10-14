@@ -105,3 +105,21 @@ and header by ASCII case-insensitive leaf matching. Save data is untouched.
 Host mixed-case open/header/missing-path tests pass under ASan/UBSan. Runtime
 patch exported and reverse-apply verified. User confirms PlayerSave1 restores progress. Full reads return success for all
 three saved packages. Choppiness comparison remains pending.
+
+## Frame timing and cache append follow-up
+
+User still reports intermittent choppiness; do not mark performance fixed.
+Timing candidate measured roughly 24–30 swap requests/sec in sampled gameplay
+windows, some shader-skipped frames and a maximum observed gap of 1049 ms.
+These are swap-request statistics, not measured screen refresh/FPS.
+The pipeline description cache stayed at 2982 bytes / 45 pipelines despite new
+compilation. Shader bytecode storage grew. New candidate explicitly seeks both
+update streams to end before writing and avoids sleeping with flush work pending.
+
+Currently installed SHA256 (supersedes earlier hashes):
+05b7c0d7e36e7244dcfa4e6a1c14c16263bb138abc7d13c7d2fd6bd1dc4ef69b.
+Raw hash verified, rollback eboot.bin.before-cache-append. Saves untouched.
+Cache growth verified: pipeline cache grew from 2982 to 23574 bytes during
+gameplay. User repeated-route comparison remains pending; no all-stutters-fixed
+claim. New timing and cache append code is exported in the runtime patch. Evidence:
+evidence/frame-timing-*, timing-before-cache-fix-*, cache-append-*.

@@ -1329,7 +1329,7 @@ index 0d8f8af..fd8f2bb 100644
  
  set_target_properties(rexgpu-xenos PROPERTIES
 diff --git a/src/graphics/vulkan/command_processor.cpp b/src/graphics/vulkan/command_processor.cpp
-index 108203c..1cf07bd 100644
+index 108203c..ca902d0 100644
 --- a/src/graphics/vulkan/command_processor.cpp
 +++ b/src/graphics/vulkan/command_processor.cpp
 @@ -1,3 +1,4 @@
@@ -1337,7 +1337,15 @@ index 108203c..1cf07bd 100644
  /**
   ******************************************************************************
   * Xenia : Xbox 360 Emulator Research Project                                 *
-@@ -497,9 +498,15 @@ void main() {
+@@ -10,6 +11,7 @@
+  */
+ 
+ #include <algorithm>
++#include <chrono>
+ #include <array>
+ #include <cstdint>
+ #include <cstring>
+@@ -497,9 +499,15 @@ void main() {
  
  bool CompileGlslToSpirvInternal(EShLanguage stage, std::string_view source,
                                  std::vector<uint32_t>& spirv_out, std::string& error_out) {
@@ -1353,7 +1361,7 @@ index 108203c..1cf07bd 100644
    const char* source_c_str = source.data();
    glslang::TShader shader(stage);
    shader.setStrings(&source_c_str, 1);
-@@ -507,6 +514,9 @@ bool CompileGlslToSpirvInternal(EShLanguage stage, std::string_view source,
+@@ -507,6 +515,9 @@ bool CompileGlslToSpirvInternal(EShLanguage stage, std::string_view source,
    shader.setEnvClient(glslang::EShClientVulkan, glslang::EShTargetVulkan_1_0);
    shader.setEnvTarget(glslang::EShTargetSpv, glslang::EShTargetSpv_1_0);
  
@@ -1363,7 +1371,7 @@ index 108203c..1cf07bd 100644
    EShMessages messages = EShMessages(EShMsgSpvRules | EShMsgVulkanRules);
    if (!shader.parse(&kGlslangDefaultTBuiltInResource, 450, false, messages)) {
      error_out = "glslang shader parse failed";
-@@ -518,6 +528,9 @@ bool CompileGlslToSpirvInternal(EShLanguage stage, std::string_view source,
+@@ -518,6 +529,9 @@ bool CompileGlslToSpirvInternal(EShLanguage stage, std::string_view source,
      return false;
    }
  
@@ -1373,7 +1381,7 @@ index 108203c..1cf07bd 100644
    glslang::TProgram program;
    program.addShader(&shader);
    if (!program.link(messages)) {
-@@ -536,6 +549,9 @@ bool CompileGlslToSpirvInternal(EShLanguage stage, std::string_view source,
+@@ -536,6 +550,9 @@ bool CompileGlslToSpirvInternal(EShLanguage stage, std::string_view source,
      return false;
    }
  
@@ -1383,7 +1391,7 @@ index 108203c..1cf07bd 100644
    glslang::SpvOptions spv_options = {};
    spv_options.disableOptimizer = true;
    spv_options.optimizeSize = false;
-@@ -1024,6 +1040,9 @@ bool VulkanCommandProcessor::SetupContext() {
+@@ -1024,6 +1041,9 @@ bool VulkanCommandProcessor::SetupContext() {
      return false;
    }
  
@@ -1393,7 +1401,7 @@ index 108203c..1cf07bd 100644
    // Shared memory and EDRAM common bindings.
    VkDescriptorPoolSize descriptor_pool_sizes[1];
    descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-@@ -1099,6 +1118,9 @@ bool VulkanCommandProcessor::SetupContext() {
+@@ -1099,6 +1119,9 @@ bool VulkanCommandProcessor::SetupContext() {
    dfn.vkUpdateDescriptorSets(device, 1 + uint32_t(edram_fragment_shader_interlock),
                               write_descriptor_sets, 0, nullptr);
  
@@ -1403,7 +1411,7 @@ index 108203c..1cf07bd 100644
    // Swap objects.
  
    // Gamma ramp, either device-local and host-visible at once, or separate
-@@ -1556,6 +1578,9 @@ bool VulkanCommandProcessor::SetupContext() {
+@@ -1556,6 +1579,9 @@ bool VulkanCommandProcessor::SetupContext() {
      return false;
    }
  
@@ -1413,7 +1421,7 @@ index 108203c..1cf07bd 100644
    // Gamma ramp application pipeline.
    // Using a graphics pipeline, not a compute one, because storage image support
    // is optional for VK_FORMAT_A2B10G10R10_UNORM_PACK32.
-@@ -1768,6 +1793,9 @@ bool VulkanCommandProcessor::SetupContext() {
+@@ -1768,6 +1794,9 @@ bool VulkanCommandProcessor::SetupContext() {
      return false;
    }
  
@@ -1423,7 +1431,7 @@ index 108203c..1cf07bd 100644
    // Gamma ramp application compute pipelines.
    swap_apply_gamma_compute_256_entry_table_pipeline_ = ui::vulkan::util::CreateComputePipeline(
        vulkan_device, swap_apply_gamma_compute_pipeline_layout_, shaders::apply_gamma_table_cs,
-@@ -1831,6 +1859,9 @@ bool VulkanCommandProcessor::SetupContext() {
+@@ -1831,6 +1860,9 @@ bool VulkanCommandProcessor::SetupContext() {
                                      "swap gamma PWL FXAA-luma compute red/blue fallback");
    }
  
@@ -1433,7 +1441,7 @@ index 108203c..1cf07bd 100644
    // FXAA compute pipelines, compiled to SPIR-V at runtime.
    std::vector<uint32_t> swap_fxaa_spirv;
    std::string swap_fxaa_compile_error;
-@@ -1890,6 +1921,9 @@ bool VulkanCommandProcessor::SetupContext() {
+@@ -1890,6 +1922,9 @@ bool VulkanCommandProcessor::SetupContext() {
  
    occlusion_query_resources_available_ = InitializeOcclusionQueryResources();
  
@@ -1443,8 +1451,35 @@ index 108203c..1cf07bd 100644
    // Just not to expose uninitialized memory.
    std::memset(&system_constants_, 0, sizeof(system_constants_));
  
+@@ -2292,6 +2327,26 @@ void VulkanCommandProcessor::IssueSwap(uint32_t frontbuffer_ptr, uint32_t frontb
+   bool skip_present_due_async_placeholder = REXCVAR_GET(async_shader_compilation) &&
+                                             REXCVAR_GET(vulkan_async_skip_incomplete_frames) &&
+                                             frame_used_async_placeholder_pipeline_;
++#if REX_PLATFORM_PS5
++  // GPU-thread-only counters: swap requests are not display refresh counts.
++  using PerfClock = std::chrono::steady_clock;
++  const auto perf_now = PerfClock::now();
++  static auto perf_start = perf_now, perf_last = perf_now;
++  static uint32_t perf_swaps = 0, perf_skips = 0, perf_over50 = 0;
++  static double perf_max_ms = 0;
++  const double gap_ms = std::chrono::duration<double, std::milli>(perf_now - perf_last).count();
++  perf_last = perf_now;
++  ++perf_swaps;
++  perf_skips += skip_present_due_async_placeholder;
++  perf_over50 += gap_ms > 50;
++  perf_max_ms = std::max(perf_max_ms, gap_ms);
++  const double elapsed = std::chrono::duration<double>(perf_now - perf_start).count();
++  if (elapsed >= 5) {
++    REXGPU_INFO("PS5 frame timing: seconds={:.2f} swap_requests={} shader_skips={} gaps_over50ms={} max_gap_ms={:.1f}",
++                elapsed, perf_swaps, perf_skips, perf_over50, perf_max_ms);
++    perf_start = perf_now; perf_swaps = perf_skips = perf_over50 = 0; perf_max_ms = 0;
++  }
++#endif
+   if (skip_present_due_async_placeholder) {
+     static bool skipped_incomplete_frame_logged = false;
+     if (!skipped_incomplete_frame_logged) {
 diff --git a/src/graphics/vulkan/pipeline_cache.cpp b/src/graphics/vulkan/pipeline_cache.cpp
-index 91ac08f..e71a5f2 100644
+index 91ac08f..5428594 100644
 --- a/src/graphics/vulkan/pipeline_cache.cpp
 +++ b/src/graphics/vulkan/pipeline_cache.cpp
 @@ -1,3 +1,4 @@
@@ -1452,7 +1487,15 @@ index 91ac08f..e71a5f2 100644
  /**
   ******************************************************************************
   * Xenia : Xbox 360 Emulator Research Project                                 *
-@@ -390,6 +391,9 @@ bool VulkanPipelineCache::Initialize() {
+@@ -10,6 +11,7 @@
+  */
+ 
+ #include <algorithm>
++#include <chrono>
+ #include <array>
+ #include <atomic>
+ #include <cstdint>
+@@ -390,6 +392,9 @@ bool VulkanPipelineCache::Initialize() {
  
  void VulkanPipelineCache::InitializeShaderStorage(const std::filesystem::path& cache_root,
                                                    uint32_t title_id, bool blocking) {
@@ -1462,6 +1505,70 @@ index 91ac08f..e71a5f2 100644
    ShutdownShaderStorage();
    {
      std::lock_guard<std::mutex> lock(creation_request_lock_);
+@@ -702,6 +707,15 @@ void VulkanPipelineCache::InitializeShaderStorage(const std::filesystem::path& c
+            pipeline_storage_file_);
+   }
+ 
++  // C update streams require positioning between reading and writing, even
++  // when truncation leaves the current position exactly at the end.
++  if (!rex::filesystem::Seek(pipeline_storage_file_, 0, SEEK_END) ||
++      !rex::filesystem::Seek(shader_storage_file_, 0, SEEK_END)) {
++    REXGPU_ERROR("Unable to position shader cache streams for appending");
++    ShutdownShaderStorage();
++    return;
++  }
++
+   shader_storage_cache_root_ = cache_root;
+   shader_storage_title_id_ = title_id;
+ 
+@@ -744,6 +758,9 @@ void VulkanPipelineCache::ShutdownShaderStorage() {
+ }
+ 
+ void VulkanPipelineCache::EndSubmission() {
++#if REX_PLATFORM_PS5
++  const auto perf_begin = std::chrono::steady_clock::now();
++#endif
+   if (shader_storage_file_flush_needed_ || pipeline_storage_file_flush_needed_) {
+     {
+       std::lock_guard<std::mutex> lock(storage_write_request_lock_);
+@@ -788,6 +805,17 @@ void VulkanPipelineCache::EndSubmission() {
+     }
+   }
+ 
++#if REX_PLATFORM_PS5
++  const auto perf_end = std::chrono::steady_clock::now();
++  static auto perf_window = perf_end;
++  static double perf_total_ms = 0, perf_max_ms = 0;
++  const double perf_ms = std::chrono::duration<double, std::milli>(perf_end - perf_begin).count();
++  perf_total_ms += perf_ms; perf_max_ms = std::max(perf_max_ms, perf_ms);
++  if (std::chrono::duration<double>(perf_end - perf_window).count() >= 5) {
++    REXGPU_INFO("PS5 pipeline waits: total_ms={:.1f} max_ms={:.1f}", perf_total_ms, perf_max_ms);
++    perf_window = perf_end; perf_total_ms = perf_max_ms = 0;
++  }
++#endif
+   ProcessDeferredPipelineDestructions(false);
+ }
+ 
+@@ -3669,7 +3697,7 @@ void VulkanPipelineCache::StorageWriteThread() {
+         storage_write_flush_pipelines_ = false;
+         flush_pipelines = true;
+       }
+-      if (!shader && !write_pipeline) {
++      if (!shader && !write_pipeline && !flush_shaders && !flush_pipelines) {
+         storage_write_request_cond_.wait(lock);
+         continue;
+       }
+@@ -3694,7 +3722,9 @@ void VulkanPipelineCache::StorageWriteThread() {
+ 
+     if (write_pipeline) {
+       assert_not_null(pipeline_storage_file_);
+-      fwrite(&pipeline_description, sizeof(pipeline_description), 1, pipeline_storage_file_);
++      if (fwrite(&pipeline_description, sizeof(pipeline_description), 1, pipeline_storage_file_) != 1) {
++        REXGPU_ERROR("Failed to append Vulkan pipeline cache record");
++      }
+     }
+   }
+ }
 diff --git a/src/graphics/vulkan/texture_cache.cpp b/src/graphics/vulkan/texture_cache.cpp
 index ecbd940..191e969 100644
 --- a/src/graphics/vulkan/texture_cache.cpp
