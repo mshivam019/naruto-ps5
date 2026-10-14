@@ -176,12 +176,14 @@ Retained optimizations:
 
 ## Source, build and verification
 
-- Project HEAD:`9ef3cd1ba86b9247775aad3cf7b1d0fdd764aeb0`.
+- Project: the 60 FPS work and the earlier performance changes are committed
+  locally as `db40781` on top of `9ef3cd1` (not pushed).
 - Game pin:`226af94268de3660c3de24061f9a6bf7ae982d3c`.
 - SDK pin:`c94f5ebdcb3c9d1a460ca48e04f9758448f8d518`.
-- Performance changes are local/uncommitted. Ignored nested SDK edits are exported
-  into `ps5/patches/rexglue-ps5.patch`; preserve both. Do not stage the unrelated
-  `archive-inspection.json` or private generated artifacts.
+- Ignored nested SDK edits are exported into `ps5/patches/rexglue-ps5.patch`
+  (checked against a fresh pinned SDK plus the six upstream patches); preserve
+  both. Do not stage the unrelated `archive-inspection.json` or private generated
+  artifacts.
 
 ```sh
 NARUTO_BUILD_JOBS=4 bash ps5/tools/build-runtime.sh
