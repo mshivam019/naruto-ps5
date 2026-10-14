@@ -1,25 +1,24 @@
 # Naruto: Rise of a Ninja PS5 workspace
 
-Read `PLAN.md` first, then `../AGENTS.md` for shared console instructions.
+Read `ps5/CURRENT_STATUS.md` first (current build, measurements, open work),
+then `PLAN.md` for history and `../AGENTS.md` for shared console instructions.
 
-The user requests a playable native Naruto port using existing templates.
-A signed local candidate exists; gameplay is unverified. The correct Xbox 360
-base dump is prepared privately; the older MUGEN ZIP is unrelated.
-User has now connected the console for installation and testing. The earlier
-local-only hold is superseded. Preserve unrelated titles and saves.
+The port is playable on PPSA99680 (firmware 9.00) with the 60 FPS mode. User
+data, saves and caches live in `/app0/user` on the console; preserve them.
 
 Keep source modifications, build outputs and receipts isolated in this folder.
 Do not modify working sibling ports or update console payloads for this project.
-Do not publish game dumps, derived game code, credentials or private artifacts.
-User selected private repository https://github.com/mshivam019/naruto-ps5. Preserve privacy.
-User confirmed PPSA99680, Naruto: Rise of a Ninja; no release selected.
-Verify console availability and the running title before deployment; preserve
-saves and close the target before replacing live files. Report actual test results.
-Update PLAN.md with exact source pins, build commands, blockers and evidence as
-work proceeds. The intended runtime is native PS5 with Vulkan, without WebGPU.
+Do not publish game dumps, derived game code, executables, credentials or
+private artifacts. Repository https://github.com/mshivam019/naruto-ps5 stays
+private; the user plans a release after the remaining performance work is
+tested. Verify console availability and the running title before deployment;
+close the target before replacing live files and keep an `eboot.bin.before-*`
+backup. Report actual test results.
 
-User now requests aiming directly for a playable build using existing native port templates.
-Host codegen succeeded for the correct Xbox 360 files; see PLAN.md latest entries.
+The user authorizes closing/restarting Naruto during testing and asks to be
+told when to play for a test. This does not authorize closing unrelated titles.
+The intended runtime is native PS5 with Vulkan, without WebGPU.
 
-User explicitly authorizes closing/restarting Naruto during testing; do not ask
-them to close it manually. This does not authorize closing unrelated titles.
+SDK edits live in the ignored `upstream/naruto-rise-recomp/sdk` tree; export
+them to `ps5/patches/rexglue-ps5.patch` (diff against the pinned SDK plus the
+six upstream patches) before committing.

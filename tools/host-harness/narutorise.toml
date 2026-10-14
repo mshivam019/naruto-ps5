@@ -1,0 +1,14 @@
+# Linux profiling harness configuration; mirrors the PS5 build where possible.
+gpu_plugin = "xenos"
+store_shaders = true
+log_level = "info"
+log_noisy = false
+log_flush_interval = 1
+vulkan_submit_on_primary_buffer_end = false
+skip_intro_videos = true
+user_language = 1
+input_backend = "sdl"
+fullscreen = false
+audio_mute = true
+# Pick the RADV device (index from the startup device list).
+vulkan_device = 0

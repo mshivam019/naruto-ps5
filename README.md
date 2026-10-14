@@ -1,39 +1,47 @@
-# Naruto: Rise of a Ninja — native PS5 work in progress
+# Naruto: Rise of a Ninja — native PS5 port
 
-Target: PPSA99680, Vulkan, firmware 9.00. This private development repository
-contains port code and build tooling. There is no verified playable PS5 build yet.
+Native PS5 build of *Naruto: Rise of a Ninja* (Xbox 360, title `555307E5`) using
+the [naruto-rise-recomp](https://github.com/jorjbarbosa/naruto-rise-recomp)
+static recompilation and the ReXGlue SDK, rendered with Vulkan through RADV.
+Title ID `PPSA99680`, tested on firmware 9.00.
 
-The complete native candidate builds, links and signs locally. Both translated
-game modules, the PS5 runtime, Xenos Vulkan renderer, controller bridge and XMA
-decoder are included. The private title is staged at `dist/PPSA99680`. Console
-boot, rendering, controls, audio, saves and exit remain untested.
+**Status:** playable. Picture, audio, controls, saves and reloads have been
+confirmed on console. The open world now uses the game's own 60 FPS mode; the
+village currently runs at roughly 25–50 FPS with game speed kept correct. See
+[`ps5/CURRENT_STATUS.md`](ps5/CURRENT_STATUS.md) for measurements and open work.
 
-Game files, generated C++, local executables and screenshots are excluded from
-Git. The first local test executable will contain generated game code and must
-not be uploaded. No release or redistribution of the upstream game-port source
-is implied; the upstream Naruto project currently has no root license.
+This repository contains only port code, build tooling and patches. Game files,
+generated C++, executables and packaged titles are excluded: the PS5 executable
+embeds code recompiled from your own disc and must not be redistributed. The
+upstream Naruto project currently has no root license.
 
-## Local preparation
+## What the port changes
 
-1. Run `python tools/fetch-sources.py` to fetch the exact source pins.
-2. Run `tools/prepare-host.sh` to build the host code generator.
-3. Extract your base-game Xbox 360 disc into `private/game_root/`.
-4. Run `python tools/prepare-codegen.py` to validate identity and prepare a
-   base-game manifest (without DLC).
-5. Run `upstream/naruto-rise-recomp/sdk/out/linux-amd64/rexglue codegen private/codegen/narutorise_manifest.toml`.
+- **60 FPS** (`ps5/app/frame_rate.cpp`, cvar `naruto_fps60`, on by default).
+  The engine requests 30 FPS in the open world and 60 in battles; requests for
+  30 become the 60 FPS mode. The open world's fixed 1/30 s timer step becomes a
+  measured step capped at 1/30 s, so game speed follows real time.
+- **Loader thread race fix** (`ps5/app/loader_thread.cpp`): the engine starts
+  its `cLoader` thread before storing the thread's entry function; the thread
+  now waits for its creator.
+- **PS5 runtime** (`ps5/patches/rexglue-ps5.patch`): sandbox paths, fibers,
+  clocks, aliased guest memory on PS5 direct memory, native display, and
+  GPU command-processor optimizations.
+- **Controls:** Cross=A, Circle=B, Square=X, Triangle=Y, Options=Start,
+  touchpad=Back. User data and caches live in `/app0/user`.
 
-The supplied disc identified as title 555307E5, media 12DF7A0D. Title identity
-and successful code generation do not establish gameplay compatibility.
+## Building
 
-Native integration reuses the working PS5 Vulkan template/platform and controller
-bridge from the local Wind Waker and Link's Awakening ports. The PS5 build still
-requires those prepared native dependencies; a standalone setup is not ready.
+The build reuses the PS5 Vulkan template, payload SDK, SDL3 and RADV prepared by
+the sibling ports in this workspace (`../Links-Awakening-PS5`,
+`../Dusklight-PS5`, `../PS5_Vulkan`); it is not yet a standalone setup.
 
-See `PLAN.md` for current build evidence and outstanding work.
-
-## Native candidate build
-
-After host code generation, run these commands from the repository root:
+1. `python3 tools/fetch-sources.py` — fetch the pinned upstream sources.
+2. `tools/prepare-host.sh` — build the host code generator.
+3. Extract your Xbox 360 disc into `private/game_root/`, then
+   `python3 tools/prepare-codegen.py` to check the title and write the manifest.
+4. `upstream/naruto-rise-recomp/sdk/out/linux-amd64/rexglue codegen private/codegen/narutorise_manifest.toml`
+5. Build and package:
 
 ```sh
 python3 tools/apply-ps5-patch.py
@@ -43,13 +51,20 @@ bash ps5/tools/test-memory.sh
 python3 ps5/tools/package-local.py
 ```
 
-Packaging requires a new output directory and verifies every copied file with
-SHA-256. The signed executable and packaged title contain private generated game
-code and disc assets: do not publish either. Build tooling currently depends on
-this workspace's prepared SDK, SDL3 and RADV; this is not a standalone installer.
-Run host preparation before applying the PS5 patch on a fresh checkout.
+Packaging writes to a new output directory and verifies each copied file with
+SHA-256.
 
-Controller defaults: Cross=A, Circle=B, Square=X, Triangle=Y, Options=Start,
-touchpad=Back. User data and caches are separate under `/app0/user`.
+## Profiling on Linux
 
-See `ps5/CURRENT_STATUS.md` for the candidate and pending console checks.
+`tools/host-harness/` builds the same patched SDK and generated code for a Linux
+desktop with Vulkan, runs the game headless inside a nested KWin with a scripted
+virtual gamepad, logs guest frame pacing and the engine timer, and captures the
+guest output. See [`tools/host-harness/README.md`](tools/host-harness/README.md).
+
+## Documentation
+
+- [`ps5/CURRENT_STATUS.md`](ps5/CURRENT_STATUS.md): installed build, measured
+  performance, known issues.
+- [`PLAN.md`](PLAN.md): chronological development log.
+- [`ps5/THIRD_PARTY_NOTICES.txt`](ps5/THIRD_PARTY_NOTICES.txt): third-party
+  notices.
