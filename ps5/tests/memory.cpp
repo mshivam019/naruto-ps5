@@ -36,7 +36,9 @@ int main() {
         assert(AllocFixed(second + 0x10000, 0x4000, AllocationType::kCommit, PageAccess::kReadWrite));
         second[0x12345] = 0x6a;
         assert(first[0x12345] == 0x6a && host_direct_allocations() == 2);
-        host_fail(HOST_CALL_PROTECT, 2);
+        // The two pages change in one protection call; failing it must leave both
+        // pages with their previous access.
+        host_fail(HOST_CALL_PROTECT, 1);
         assert(!Protect(first, 0x8000, PageAccess::kReadOnly));
         host_fail(HOST_CALL_NONE, 0);
         first[0x1234] = 0x37;  // First page must be writable again after rollback.

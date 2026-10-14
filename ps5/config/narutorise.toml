@@ -3,3 +3,6 @@ store_shaders = true
 log_level = "info"
 log_noisy = false
 log_flush_interval = 1
+
+# Keep adjacent guest command buffers in one submission until required synchronization.
+vulkan_submit_on_primary_buffer_end = false
