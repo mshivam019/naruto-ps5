@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<rect width="512" height="512" fill="#14171e"/>
+<path d="M0 350L512 100V512H0Z" fill="#e76e22"/>
+<path d="M0 376L512 126" stroke="#ffad43" stroke-width="8"/>
+<text x="38" y="185" fill="#fff6e7" font-family="DejaVu Sans,sans-serif" font-weight="bold" font-size="77">NARUTO</text>
+<text x="42" y="235" fill="#fff6e7" font-family="DejaVu Sans,sans-serif" font-size="26">RISE OF A NINJA</text>
+<text x="42" y="462" fill="#14171e" font-family="DejaVu Sans,sans-serif" font-size="24" font-weight="bold">PS5 • DEVELOPMENT BUILD</text>
+</svg>

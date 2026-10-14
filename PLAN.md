@@ -2,6 +2,13 @@
 
 Updated 2026-10-14. Workspace: `/home/skm/Downloads/ps5/Naruto-Rise-PS5`.
 
+## Current status (supersedes historical entries below)
+
+The complete signed local candidate is ready at `dist/PPSA99680`. See
+`ps5/CURRENT_STATUS.md` for verified results and pending hardware checks.
+Repository/title selection, correct input preparation and native compilation are
+complete. User will connect the PS5 after local completion; no console actions.
+
 ## Objective and user decisions
 
 Port Xbox 360 **Naruto: Rise of a Ninja** to a native PS5 title using the existing

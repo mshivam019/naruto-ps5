@@ -2,10 +2,11 @@
 
 Read `PLAN.md` first, then `../AGENTS.md` for shared console instructions.
 
-The user authorized the Vulkan approach and asked for a new folder and complete
-handoff so another agent can continue. No playable build currently exists here.
-The Downloads ZIP is a MUGEN package, not the Xbox 360 game; see
-`archive-inspection.json`. Do not use it as ReXGlue input or execute its EXE.
+The user requests a playable native Naruto port using existing templates.
+A signed local candidate exists; gameplay is unverified. The correct Xbox 360
+base dump is prepared privately; the older MUGEN ZIP is unrelated.
+Latest instruction: keep building locally and tell the user when ready. They
+will connect the console afterward. Do not contact or deploy to the PS5 yet.
 
 Keep source modifications, build outputs and receipts isolated in this folder.
 Do not modify working sibling ports or update console payloads for this project.

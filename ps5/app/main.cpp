@@ -65,7 +65,7 @@ int main() {
         int result = 1;
         {
             NarutoPS5App app(context);
-            if (app.OnInitialize()) result = context.RunMainMessageLoop();
+            if (static_cast<rex::ui::WindowedApp&>(app).OnInitialize()) result = context.RunMainMessageLoop();
             app.InvokeOnDestroy();
         }
         ps5_input_shutdown();
