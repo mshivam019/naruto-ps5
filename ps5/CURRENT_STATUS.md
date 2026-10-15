@@ -1,27 +1,48 @@
 # Naruto PS5 — current status
 
-Updated October 15, 2026, after the v6 console test (user: graphics correct,
-"this one feels better"). Next step: release preparation, after user approval.
-This document supersedes older candidate/status statements in PLAN.md.
+Updated October 15, 2026. `main` keeps the original frame rates (open world
+30 FPS, battles and menus 60); the 60 FPS unlock lives on branch
+`experimental-60fps` (work in progress). Next step: release preparation (ROM-free
+app plus desktop setup, see PLAN.md).
 
 ## Current state and user instructions
 
-- **Playable, still under performance development.** User confirmed picture,
-  normal game speed, Start, movement, audio, save creation and PlayerSave1 reload.
-- Title **Naruto: Rise of a Ninja / PPSA99680**, firmware9.00.
+- **Playable.** User confirmed picture, normal game speed, controls, audio,
+  rumble in battles, save creation and reload, and a steady 30 FPS in the
+  village (`evidence/steady30-user-runtime.log`: 30.0 presents/s, max gap 35 ms).
+- Title **Naruto: Rise of a Ninja / PPSA99680**, firmware 9.00.
   Installed at `/mnt/ext1/etaHEN/games/PPSA99680`.
-- Latest live check: Naruto v6 running (PID 107) after the user test. Recheck
-  IDs before acting.
-- User explicitly said **do not roll back** after the descriptor-fast regression.
-  No rollback occurred. The latest build is a forward fix retaining the previous
-  optimizations. Closing/restarting Naruto for testing is authorized, but preserve
-  the active session during read-only/status work. Never close unrelated titles.
+- Installed build: PlayStation prompts and save pictures (SHA-256
+  `af9ef5e1f1fd7c25fd58e5c8090b140a9c5a2a92048cbefbce8c76bf40eeac6d`, backup
+  `eboot.bin.before-savepic`). Closing/restarting Naruto for testing is
+  authorized. Never close unrelated titles.
 - Repository `mshivam019/naruto-ps5` remains private. No release published.
   Generated game code, executables, disc assets and raw evidence must not be published.
 
-## 60 FPS work
+## PlayStation prompts, rumble and save pictures
 
-- **Unlock** (`ps5/app/frame_rate.cpp`, cvar `naruto_fps60`, default on). The
+- **Prompts** (`ps5/app/button_prompts.cpp`): every Xbox prompt is its own
+  small DXT5 texture. The texture cache hook `TextureCache::SetGuestTextureLoadHook`
+  runs before a texture is uploaded; textures whose untiled contents hash to a
+  known prompt are redrawn in guest memory (BC3) as Cross, Circle, Square,
+  Triangle, L1 or L3. 17 variants are listed, found with
+  `naruto_texture_dump_dir` on the harness and in a console session that
+  visited the village, menus, map and a battle (583 distinct textures). RB,
+  triggers, Start and Back prompts did not appear in that session.
+- **Rumble** works (user felt it in battles); the game sends vibration only in
+  battles, otherwise zero.
+- **Save pictures** (`ps5/app/save_picture.cpp`): when saving, the game resolves
+  a 320x180 RGB565 picture and reads it on the CPU into `Save.dat`; Load Game
+  shows it. With resolve readback off, saves stored a blank picture (black
+  box). `readback_resolve = "fast"` (the PC port's `d3d12_readback_resolve`)
+  fixed it on the harness but dropped the console to about 2 FPS (0.9 s per
+  frame). The SDK now has `CommandProcessor::SetResolveReadbackFilter`; only the
+  320x180 RGB565 resolve is read back, synchronously, once per save. Harness:
+  the new save shows its picture. Older saves stay black until saved again.
+
+## 60 FPS work (branch `experimental-60fps`)
+
+- **Unlock** (`ps5/app/frame_rate.cpp` on the branch, cvar `naruto_fps60`). The
   game picks its rate through engine command dispatcher `sub_820EACE0`:
   command 45 requests and 68 locks a rate; 60 selects PresentInterval 1 and sets
   the engine 60 FPS flag at `0x82C0F050`, anything else PresentInterval 2.

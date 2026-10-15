@@ -73,6 +73,30 @@ void ScriptThread() {
     SetButton(j, b, false);
     Sleep(1.1);
   }
+  // NARUTO_HARNESS_THEN="DOWN,A,WAIT": taps after the mash phase, then holds still.
+  if (const char* then = std::getenv("NARUTO_HARNESS_THEN")) {
+    const std::string sequence = then;
+    for (size_t begin = 0; begin < sequence.size();) {
+      size_t end = sequence.find(',', begin);
+      if (end == std::string::npos) end = sequence.size();
+      const std::string token = sequence.substr(begin, end - begin);
+      begin = end + 1;
+      if (token == "WAIT") {
+        Sleep(1.25);
+        continue;
+      }
+      const SDL_GamepadButton b = token == "B"       ? SDL_GAMEPAD_BUTTON_EAST
+                                  : token == "UP"    ? SDL_GAMEPAD_BUTTON_DPAD_UP
+                                  : token == "DOWN"  ? SDL_GAMEPAD_BUTTON_DPAD_DOWN
+                                  : token == "START" ? SDL_GAMEPAD_BUTTON_START
+                                                     : SDL_GAMEPAD_BUTTON_SOUTH;
+      SetButton(j, b, true);
+      Sleep(0.15);
+      SetButton(j, b, false);
+      Sleep(1.1);
+    }
+    return;
+  }
   REXLOG_INFO("[harness] walking phase");
   const auto walk_end = Clock::now() + std::chrono::duration<double>(walk);
   int step = 0;

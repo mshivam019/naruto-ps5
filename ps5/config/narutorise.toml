@@ -12,7 +12,4 @@ vulkan_submit_on_primary_buffer_end = false
 # them is writable). Set true to re-upload every frame if graphics go stale.
 clear_memory_page_state = false
 
-# Open world at the game's own steady 30 FPS (battles and menus stay at 60).
-# The console can't hold 60 in the village yet; an even 30 feels smoother than
-# 30-50. Set true to request 60 everywhere.
-naruto_fps60 = false
+

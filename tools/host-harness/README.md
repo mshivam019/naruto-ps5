@@ -1,7 +1,7 @@
 # Linux profiling harness
 
 Builds the PS5 port's patched ReXGlue SDK, the private generated game code and
-the PS5 app's guest hooks (`frame_rate.cpp`, `loader_thread.cpp`) for a Linux
+the PS5 app's guest hook (`loader_thread.cpp`) for a Linux
 desktop with Vulkan. It reproduces the PS5 command-processor workload on a
 desktop RADV GPU so changes can be profiled and checked before a console test.
 Builds contain recompiled game code: never publish them.

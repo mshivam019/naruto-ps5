@@ -6,11 +6,12 @@ static recompilation and the ReXGlue SDK, rendered with Vulkan through RADV.
 Title ID `PPSA99680`, tested on firmware 9.00.
 
 **Status:** playable. Picture, audio, controls, saves and reloads have been
-confirmed on console. The open world runs at the game's own steady 30 FPS by
-default, with battles and menus at 60. Setting `naruto_fps60 = true` requests
-60 everywhere with game speed kept correct; the village then reaches about
-30–50 FPS. See [`ps5/CURRENT_STATUS.md`](ps5/CURRENT_STATUS.md) for
-measurements and open work.
+confirmed on console. Like the Xbox 360 original, the open world runs at a
+steady 30 FPS and battles and menus at 60. An experimental 60 FPS open world
+(work in progress, about 30–50 FPS in the village) lives on the
+[`experimental-60fps`](https://github.com/mshivam019/naruto-ps5/tree/experimental-60fps)
+branch. See [`ps5/CURRENT_STATUS.md`](ps5/CURRENT_STATUS.md) for measurements
+and open work.
 
 This repository contains only port code, build tooling and patches. Game files,
 generated C++, executables and packaged titles are excluded: the PS5 executable
@@ -19,13 +20,20 @@ upstream Naruto project currently has no root license.
 
 ## What the port changes
 
-- **60 FPS** (`ps5/app/frame_rate.cpp`, cvar `naruto_fps60`, on by default).
-  The engine requests 30 FPS in the open world and 60 in battles; requests for
-  30 become the 60 FPS mode. The open world's fixed 1/30 s timer step becomes a
-  measured step capped at 1/30 s, so game speed follows real time.
 - **Loader thread race fix** (`ps5/app/loader_thread.cpp`): the engine starts
   its `cLoader` thread before storing the thread's entry function; the thread
   now waits for its creator.
+- **PlayStation button prompts** (`ps5/app/button_prompts.cpp`): the game's
+  Xbox prompt textures are recognised by content hash when they load and
+  redrawn as Cross, Circle, Square, Triangle, L1 and L3. The glyphs are drawn
+  by the port; no console artwork is included. Cvar
+  `naruto_playstation_prompts` (default true).
+- **Save-file pictures** (`ps5/app/save_picture.cpp`): the 320×180 picture
+  the game captures when saving is read back from the GPU, so Load Game shows
+  it. Only that copy is read back; reading every copy back drops the console
+  to about 2 FPS.
+- **Rumble** works through the DualSense in compatibility mode; the game only
+  vibrates in battles.
 - **PS5 runtime** (`ps5/patches/rexglue-ps5.patch`): sandbox paths, fibers,
   clocks, aliased guest memory on PS5 direct memory, native display, and
   GPU command-processor optimizations.

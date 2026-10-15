@@ -26,9 +26,10 @@ target_compile_definitions(naruto_ai2c PRIVATE
     ReXModule_GetImageInfo=NarutoAI2C_GetImageInfo
     PPCImageConfig=NarutoAI2C_ImageConfig
     PPCFuncMappings=NarutoAI2C_FuncMappings)
-add_library(naruto_app STATIC main.cpp builtin-module.cpp input.cpp frame_rate.cpp loader_thread.cpp native/platform.c
+add_library(naruto_app STATIC main.cpp builtin-module.cpp input.cpp button_prompts.cpp save_picture.cpp loader_thread.cpp native/platform.c
     "${NARUTO_UPSTREAM}/sdk/src/ui/rex_app.cpp")
 target_link_libraries(naruto_app PRIVATE naruto_ps5_runtime imgui)
-target_include_directories(naruto_app PRIVATE "${NARUTO_GENERATED}/default")
+target_include_directories(naruto_app PRIVATE "${NARUTO_GENERATED}/default"
+    "${NARUTO_UPSTREAM}/sdk/thirdparty/xxHash")
 target_compile_definitions(naruto_app PRIVATE REXGLUE_BUILD_CONFIG="Release")
 target_compile_options(naruto_app PRIVATE -O2 -g0)

@@ -71,7 +71,8 @@ generated_sources(ai2c AI2C_SOURCES)
 
 add_executable(narutorise
     "${APP_SRC}/main.cpp" "${APP_SRC}/intro_skip.cpp" "${APP_SRC}/ultrawide.cpp"
-    "${ROOT}/ps5/app/frame_rate.cpp" "${ROOT}/ps5/app/loader_thread.cpp"
+    "${ROOT}/ps5/app/button_prompts.cpp" "${ROOT}/ps5/app/save_picture.cpp"
+    "${ROOT}/ps5/app/loader_thread.cpp"
     harness_probe.cpp)
 target_link_libraries(narutorise PRIVATE imgui)
 add_library(narutorise_recomp OBJECT ${DEFAULT_SOURCES})
@@ -80,7 +81,8 @@ target_link_libraries(narutorise_recomp PRIVATE rex::runtime)
 rexglue_apply_target_settings(narutorise_recomp)
 target_precompile_headers(narutorise_recomp PRIVATE "${GENERATED}/default/narutorise_pch.h")
 target_compile_options(narutorise_recomp PRIVATE ${RECOMP_OPTIONS})
-target_link_libraries(narutorise PRIVATE narutorise_recomp rex::runtime)
+# button_prompts.cpp registers a texture hook in the GPU library (a plugin on Linux).
+target_link_libraries(narutorise PRIVATE narutorise_recomp rex::runtime rex::gpu-xenos)
 target_include_directories(narutorise PRIVATE "${GENERATED}/.." "${GENERATED}/default" "${APP_SRC}")
 rexglue_configure_target(narutorise GPU_PLUGINS xenos)
 

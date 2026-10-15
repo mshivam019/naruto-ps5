@@ -3,7 +3,8 @@
 Read `ps5/CURRENT_STATUS.md` first (current build, measurements, open work),
 then `PLAN.md` for history and `../AGENTS.md` for shared console instructions.
 
-The port is playable on PPSA99680 (firmware 9.00) with the 60 FPS mode. User
+The port is playable on PPSA99680 (firmware 9.00); main keeps the original 30/60 FPS split and
+experimental 60 FPS work lives on branch `experimental-60fps`. User
 data, saves and caches live in `/app0/user` on the console; preserve them.
 
 Keep source modifications, build outputs and receipts isolated in this folder.
