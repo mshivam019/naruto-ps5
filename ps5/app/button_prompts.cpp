@@ -43,22 +43,28 @@ struct KnownPrompt {
   uint64_t hash;  // XXH3 of the untiled, host-endian block data
   Glyph glyph;
 };
-// Xbox prompts seen in the village, menus, map and battles (all DXT5).
+// Xbox prompts seen in the village, menus, map, battles and jutsu cinematics (all DXT5).
 constexpr KnownPrompt kKnownPrompts[] = {
     {0xb5c470bde68ac157, Glyph::kCross},     // A 32x32
     {0x62a68c66652d1f22, Glyph::kCross},     // A 48x48
     {0x3e6f39b5453fa000, Glyph::kCross},     // A 48x48
     {0x1ca42be253a4999d, Glyph::kCross},     // A 64x64
     {0x827dfb6060e1624d, Glyph::kCross},     // A 96x96
+    {0x013d112f4b3397e1, Glyph::kCross},     // A 128x128 (jutsu quick-time prompt)
     {0x18d632c93e9a100e, Glyph::kCircle},    // B 32x32
     {0xbd3d5b063303f13f, Glyph::kCircle},    // B 48x48
+    {0x9b4c720cf34d3d75, Glyph::kCircle},    // B 96x96 (jutsu quick-time prompt)
+    {0xebfc4f2d009af004, Glyph::kCircle},    // B 128x128 (jutsu quick-time prompt)
     {0x42c8af07e98bc525, Glyph::kSquare},    // X 36x36
     {0x04d187e122b5e04e, Glyph::kSquare},    // X 48x48
     {0x644c75e5bdbedd01, Glyph::kSquare},    // X 96x96
+    {0x9156e4c9578f0042, Glyph::kSquare},    // X 128x128 (jutsu quick-time prompt)
     {0xbf48a1c60bd1ada2, Glyph::kSquare},    // X 116x116
     {0x96bd711c4f163121, Glyph::kTriangle},  // Y 44x44
     {0xe69fe7410824de23, Glyph::kTriangle},  // Y 48x48
     {0x55f0a9ee43db1e49, Glyph::kTriangle},  // Y 56x56
+    {0x2eda8e0e8d9ff1d6, Glyph::kTriangle},  // Y 96x96 (jutsu quick-time prompt)
+    {0x76dc536fece2a958, Glyph::kTriangle},  // Y 128x128 (jutsu quick-time prompt)
     {0xbf59fa8570657410, Glyph::kL1},        // LB 68x32
     {0x078a364e6f00b1f4, Glyph::kL3},        // LS 48x48
 };
