@@ -717,6 +717,48 @@ index 352af67..5679e81 100644
    std::vector<uint8_t> stack_;
    void (*entry_)(void*) = nullptr;
    void* arg_ = nullptr;
+diff --git a/include/rex/ui/presenter.h b/include/rex/ui/presenter.h
+index afb4a30..b16f165 100644
+--- a/include/rex/ui/presenter.h
++++ b/include/rex/ui/presenter.h
+@@ -716,6 +716,10 @@ class Presenter {
+   // Call via PaintAndPresent.
+   virtual PaintResult PaintAndPresentImpl(bool execute_ui_drawers) = 0;
+ 
++  // Stops the frame pacing thread; implementations call it before destroying
++  // anything the thread may be painting with.
++  void ShutdownFramePacing();
++
+   // For calling from the painting implementations if requested.
+   void ExecuteUIDrawersFromUIThread(UIDrawContext& ui_draw_context);
+ 
+@@ -977,6 +981,26 @@ class Presenter {
+   // rather than being blank.
+   bool guest_output_active_last_refresh_ = false;
+ 
++  // Frame pacing (cvar present_frame_pacing). With FIFO presentation, a
++  // dedicated thread presents once per display refresh: a new guest frame only
++  // after the current one has been on screen for its whole guest frame interval
++  // (two refreshes at 30 FPS), otherwise the current frame again. Frames then
++  // stay on screen for even durations instead of the guest output thread's
++  // present timing deciding, and that thread never waits for the display.
++  void FramePacingThread();
++  std::thread frame_pacing_thread_;
++  std::mutex frame_pacing_mutex_;
++  std::condition_variable frame_pacing_condition_;
++  // Guarded by frame_pacing_mutex_.
++  bool frame_pacing_shutdown_ = false;
++  uint64_t frame_pacing_published_ = 0;
++  double frame_pacing_interval_ms_ = 1000.0 / 30.0;
++  uint64_t frame_pacing_last_publish_ns_ = 0;
++  // Set by the pacing thread, with paint_mode_mutex_ held, while it presents
++  // the current guest output again; makes ConsumeGuestOutput keep the
++  // acquired image instead of taking a newer ready one.
++  bool consume_hold_ = false;
++
+   // Ordered by the Z order, and then by the time of addition.
+   // Note: All the iteration logic involving this Z ordering must be the same as
+   // in input handling (in the input listeners in the Window), but in reverse.
 diff --git a/include/rex/ui/renderdoc_api.h b/include/rex/ui/renderdoc_api.h
 index 536f710..ba5cf76 100644
 --- a/include/rex/ui/renderdoc_api.h
@@ -4257,6 +4299,199 @@ index 5bd3dc5..539764d 100644
      target_link_libraries(rexui PUBLIC dxc-headers)
  endif()
 -
+diff --git a/src/ui/d3d12/d3d12_presenter.cpp b/src/ui/d3d12/d3d12_presenter.cpp
+index 306118e..65b07b5 100644
+--- a/src/ui/d3d12/d3d12_presenter.cpp
++++ b/src/ui/d3d12/d3d12_presenter.cpp
+@@ -52,6 +52,8 @@ namespace shaders {
+ }  // namespace shaders
+ 
+ D3D12Presenter::~D3D12Presenter() {
++  ShutdownFramePacing();
++
+   // Await completion of the usage of everything before destroying anything.
+   // From most likely the latest to most likely the earliest to be signaled, so
+   // just one sleep will likely be needed.
+diff --git a/src/ui/presenter.cpp b/src/ui/presenter.cpp
+index 7360ed9..dfdfac6 100644
+--- a/src/ui/presenter.cpp
++++ b/src/ui/presenter.cpp
+@@ -12,6 +12,7 @@
+ #include <algorithm>
+ #include <atomic>
+ #include <cctype>
++#include <chrono>
+ #include <utility>
+ 
+ #include <rex/assert.h>
+@@ -26,6 +27,11 @@
+ #include <ffx_api/ffx_upscale.h>
+ #endif
+ 
++REXCVAR_DEFINE_BOOL(present_frame_pacing, false, "UI/Presenter",
++                    "Present from a dedicated thread once per display refresh so each guest "
++                    "frame stays on screen for whole, even refresh counts (FIFO displays)")
++    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
++
+ REXCVAR_DEFINE_BOOL(host_present_from_non_ui_thread, true, "UI/Presenter",
+                     "Allow presentation from non-UI thread");
+ 
+@@ -287,6 +293,8 @@ Presenter::~Presenter() {
+   // it if needed.
+   assert_false(is_executing_ui_drawers_);
+ 
++  ShutdownFramePacing();
++
+ #if REX_PLATFORM_WIN32
+   if (dxgi_ui_tick_thread_.joinable()) {
+     {
+@@ -613,6 +621,24 @@ bool Presenter::RefreshGuestOutput(
+     guest_output_mailbox_writable_ = (3 - last_acquired - guest_output_mailbox_writable_) % 3;
+   }
+ 
++  if (frame_pacing_thread_.joinable()) {
++    const uint64_t now_ns = uint64_t(std::chrono::duration_cast<std::chrono::nanoseconds>(
++                                         std::chrono::steady_clock::now().time_since_epoch())
++                                         .count());
++    {
++      std::lock_guard<std::mutex> lock(frame_pacing_mutex_);
++      if (frame_pacing_last_publish_ns_) {
++        const double delta_ms =
++            std::clamp(double(now_ns - frame_pacing_last_publish_ns_) / 1e6, 5.0, 100.0);
++        frame_pacing_interval_ms_ = frame_pacing_interval_ms_ * 0.75 + delta_ms * 0.25;
++      }
++      frame_pacing_last_publish_ns_ = now_ns;
++      ++frame_pacing_published_;
++    }
++    frame_pacing_condition_.notify_one();
++    return is_active;
++  }
++
+   // Trigger the presentation on the host.
+   PaintResult paint_result = PaintResult::kNotPresented;
+   {
+@@ -796,9 +822,96 @@ bool Presenter::InitializeCommonSurfaceIndependent() {
+   dxgi_ui_tick_thread_ = std::thread(&Presenter::DXGIUITickThread, this);
+ #endif  // XE_PLATFORM
+ 
++  if (REXCVAR_GET(present_frame_pacing)) {
++    frame_pacing_thread_ = std::thread(&Presenter::FramePacingThread, this);
++  }
++
+   return true;
+ }
+ 
++void Presenter::ShutdownFramePacing() {
++  if (!frame_pacing_thread_.joinable()) {
++    return;
++  }
++  {
++    std::lock_guard<std::mutex> lock(frame_pacing_mutex_);
++    frame_pacing_shutdown_ = true;
++  }
++  frame_pacing_condition_.notify_all();
++  frame_pacing_thread_.join();
++}
++
++void Presenter::FramePacingThread() {
++  uint64_t consumed = 0;
++  // Display refreshes (presents) the current guest frame has been queued for.
++  uint32_t shown_refreshes = 0;
++  // Whether frames are arriving; while idle, wait for the next one instead of
++  // presenting the same image every refresh.
++  bool streaming = false;
++  for (;;) {
++    uint64_t published;
++    double interval_ms;
++    {
++      std::unique_lock<std::mutex> lock(frame_pacing_mutex_);
++      if (!streaming) {
++        frame_pacing_condition_.wait(lock, [&] {
++          return frame_pacing_shutdown_ || frame_pacing_published_ != consumed;
++        });
++      }
++      if (frame_pacing_shutdown_) {
++        return;
++      }
++      published = frame_pacing_published_;
++      interval_ms = frame_pacing_interval_ms_;
++    }
++    // 60 Hz display: guest frames at 30 FPS take two refreshes, at 60 FPS one.
++    const uint32_t refreshes_per_frame = interval_ms > 25.0 ? 2 : 1;
++    const bool new_frame = published != consumed;
++    const bool consume = new_frame && (!streaming || shown_refreshes >= refreshes_per_frame);
++    if (!consume && shown_refreshes >= refreshes_per_frame + 2) {
++      // The guest stopped producing frames (loading, pause): the display keeps
++      // the last image; wait for the next frame.
++      streaming = false;
++      continue;
++    }
++    PaintResult paint_result = PaintResult::kNotPresented;
++    bool painted = false;
++    {
++      std::lock_guard<std::mutex> paint_mode_mutex_lock(paint_mode_mutex_);
++      if (paint_mode_ == PaintMode::kGuestOutputThreadImmediately) {
++        if (surface_paint_connection_state_ == SurfacePaintConnectionState::kConnectedPaintable) {
++          consume_hold_ = !consume;
++          paint_result = PaintAndPresent(false);
++          consume_hold_ = false;
++          painted = true;
++          if (surface_paint_connection_state_ == SurfacePaintConnectionState::kConnectedOutdated) {
++            RequestPaintOrConnectionRecoveryViaWindow(true);
++          }
++        }
++      } else if (paint_mode_ == PaintMode::kUIThreadOnRequest && consume) {
++        RequestPaintOrConnectionRecoveryViaWindow(true);
++      }
++    }
++    if (host_gpu_loss_callback_) {
++      if (paint_result == PaintResult::kGpuLostResponsible) {
++        host_gpu_loss_callback_(true, false);
++      } else if (paint_result == PaintResult::kGpuLostExternally) {
++        host_gpu_loss_callback_(false, false);
++      }
++    }
++    if (consume) {
++      consumed = published;
++      shown_refreshes = 1;
++    } else {
++      ++shown_refreshes;
++    }
++    // Without a present (UI thread painting, or disconnected), there is no
++    // display refresh to wait on: go back to waiting for frames.
++    streaming = painted && (paint_result == PaintResult::kPresented ||
++                            paint_result == PaintResult::kPresentedSuboptimal);
++  }
++}
++
+ std::unique_lock<std::mutex> Presenter::ConsumeGuestOutput(
+     uint32_t& mailbox_index_or_max_if_inactive_out, GuestOutputProperties* properties_out,
+     GuestOutputPaintConfig* paint_config_out) {
+@@ -824,10 +937,12 @@ std::unique_lock<std::mutex> Presenter::ConsumeGuestOutput(
+   // consumer though, the consumer mutex performs memory access ordering).
+   uint32_t old_acquired_and_ready =
+       guest_output_mailbox_acquired_and_ready_.load(std::memory_order_relaxed);
+-  // Desired acquired = current ready.
++  // Desired acquired = current ready, or, while the frame pacing thread
++  // presents the current frame again, the current acquired image.
+   // Desired ready = current ready (changed only by the producer).
+   uint32_t desired_acquired_and_ready =
+-      (old_acquired_and_ready & ~uint32_t(3)) | (old_acquired_and_ready >> 2);
++      consume_hold_ ? old_acquired_and_ready
++                    : (old_acquired_and_ready & ~uint32_t(3)) | (old_acquired_and_ready >> 2);
+   // Either the same image as during the last consumption, or a new one, is
+   // satisfying. However, if it's new, using memory_order_acq_rel to acquire the
+   // new ready image (to make it acquired) and to release the old acquired image
+@@ -837,7 +952,8 @@ std::unique_lock<std::mutex> Presenter::ConsumeGuestOutput(
+              old_acquired_and_ready, desired_acquired_and_ready, std::memory_order_acq_rel,
+              std::memory_order_relaxed)) {
+     desired_acquired_and_ready =
+-        (old_acquired_and_ready & ~uint32_t(3)) | (old_acquired_and_ready >> 2);
++        consume_hold_ ? old_acquired_and_ready
++                      : (old_acquired_and_ready & ~uint32_t(3)) | (old_acquired_and_ready >> 2);
+   }
+   uint32_t mailbox_index = desired_acquired_and_ready & 3;
+   // Give the current acquired image to the caller, or UINT32_MAX if it's
 diff --git a/src/ui/renderdoc_api.cpp b/src/ui/renderdoc_api.cpp
 index e1a5287..2a24b2b 100644
 --- a/src/ui/renderdoc_api.cpp
@@ -4416,7 +4651,7 @@ index 914b311..687118f 100644
    if (vulkan_instance->extensions_.ext_EXT_debug_utils) {
  #include <rex/ui/vulkan/functions/instance_ext_debug_utils.inc>
 diff --git a/src/ui/vulkan/vulkan_presenter.cpp b/src/ui/vulkan/vulkan_presenter.cpp
-index 23645ef..ff28664 100644
+index 23645ef..db5f46f 100644
 --- a/src/ui/vulkan/vulkan_presenter.cpp
 +++ b/src/ui/vulkan/vulkan_presenter.cpp
 @@ -45,6 +45,9 @@
@@ -4429,7 +4664,16 @@ index 23645ef..ff28664 100644
  
  REXCVAR_DEFINE_BOOL(present_render_pass_clear, true, "UI/Presenter",
                      "Clear render pass during presentation");
-@@ -423,6 +426,11 @@ Surface::TypeFlags VulkanPresenter::GetSurfaceTypesSupportedByInstance(
+@@ -190,6 +193,8 @@ bool VulkanPresenter::PaintContext::Submission::Initialize() {
+ }
+ 
+ VulkanPresenter::~VulkanPresenter() {
++  ShutdownFramePacing();
++
+   // Destroy the swapchain after its images are not used for drawing anymore.
+   // This is a confusing part in Vulkan, as vkQueuePresentKHR doesn't signal a
+   // fence clearly indicating when it's safe to destroy a swapchain, so we
+@@ -423,6 +428,11 @@ Surface::TypeFlags VulkanPresenter::GetSurfaceTypesSupportedByInstance(
      return 0;
    }
    Surface::TypeFlags type_flags = 0;
@@ -4441,7 +4685,7 @@ index 23645ef..ff28664 100644
  #if REX_PLATFORM_ANDROID
    if (instance_extensions.ext_KHR_android_surface) {
      type_flags |= Surface::kTypeFlag_AndroidNativeWindow;
-@@ -796,6 +804,74 @@ VulkanPresenter::ConnectOrReconnectPaintingToSurfaceFromUIThread(Surface& new_su
+@@ -796,6 +806,74 @@ VulkanPresenter::ConnectOrReconnectPaintingToSurfaceFromUIThread(Surface& new_su
      }
      VkResult vulkan_surface_create_result = VK_ERROR_UNKNOWN;
      switch (surface_type) {

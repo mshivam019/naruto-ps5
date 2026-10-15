@@ -9,9 +9,14 @@ set(NARUTO_UPSTREAM "${CMAKE_CURRENT_LIST_DIR}/../../upstream/naruto-rise-recomp
 set(NARUTO_MODULE_DIR "${CMAKE_CURRENT_LIST_DIR}/../module")
 set(NARUTO_MODULE_GENERATED "${CMAKE_CURRENT_BINARY_DIR}/module-generated")
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
+# The module ABI identity covers these inputs and the SDK headers listed in
+# abi-headers.txt; regenerate the app's copy when any of them changes.
+file(STRINGS "${NARUTO_MODULE_DIR}/abi-headers.txt" NARUTO_ABI_HEADERS REGEX "^[^#]")
+list(TRANSFORM NARUTO_ABI_HEADERS PREPEND "${NARUTO_UPSTREAM}/sdk/")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     "${NARUTO_MODULE_DIR}/host-imports.txt" "${NARUTO_MODULE_DIR}/compile-flags.txt"
-    "${CMAKE_CURRENT_LIST_DIR}/../patches/rexglue-ps5.patch")
+    "${NARUTO_MODULE_DIR}/abi-headers.txt" "${NARUTO_MODULE_DIR}/toolchain.json"
+    ${NARUTO_ABI_HEADERS})
 execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/../tools/module-support.py"
     --output "${NARUTO_MODULE_GENERATED}"
     COMMAND_ERROR_IS_FATAL ANY)

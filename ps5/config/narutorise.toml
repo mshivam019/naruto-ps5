@@ -13,3 +13,7 @@ vulkan_submit_on_primary_buffer_end = false
 clear_memory_page_state = false
 
 
+
+# Present each frame for whole display refreshes (two at 30 FPS) from a pacing
+# thread, instead of whenever the frame is ready: removes uneven frame times.
+present_frame_pacing = true

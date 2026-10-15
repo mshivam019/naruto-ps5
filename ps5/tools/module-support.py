@@ -10,9 +10,19 @@ import re
 ROOT = Path(__file__).resolve().parents[2]
 IMPORTS = ROOT / 'ps5/module/host-imports.txt'
 FLAGS = ROOT / 'ps5/module/compile-flags.txt'
-# Everything that shapes the binary interface between app and module.
-ABI_INPUTS = [IMPORTS, FLAGS, ROOT / 'ps5/patches/rexglue-ps5.patch',
+# SDK headers the module is compiled against (paths relative to the SDK),
+# recorded with build-game-module.py --write-imports.
+HEADERS = ROOT / 'ps5/module/abi-headers.txt'
+SDK = ROOT / 'upstream/naruto-rise-recomp/sdk'
+# Everything that shapes the binary interface between app and module. Runtime
+# changes outside these headers keep existing modules valid.
+ABI_INPUTS = [IMPORTS, FLAGS, HEADERS, ROOT / 'ps5/module/toolchain.json',
               ROOT / 'ps5/tools/prepare-static-module.py']
+
+
+def abi_headers():
+    return [line.strip() for line in HEADERS.read_text().splitlines()
+            if line.strip() and not line.startswith('#')]
 
 
 def imports():
@@ -24,9 +34,11 @@ def imports():
 
 
 def abi():
-    digest = hashlib.sha256(b'naruto-ps5-module-v1\0')
+    digest = hashlib.sha256(b'naruto-ps5-module-v2\0')
     for path in ABI_INPUTS:
         digest.update(path.read_bytes())
+    for name in abi_headers():
+        digest.update(name.encode() + b'\0' + (SDK / name).read_bytes())
     return digest.hexdigest()
 
 

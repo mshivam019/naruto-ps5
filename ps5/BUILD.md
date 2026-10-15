@@ -34,9 +34,11 @@ python3 ps5/tools/setup.py --iso /path/to/naruto.iso --output /tmp/prepared/PPSA
 
 The app and module share a contract: the runtime symbols the module imports
 (`ps5/module/host-imports.txt`) and an ABI identity hashed from that list, the
-compile flags (`ps5/module/compile-flags.txt`), the SDK patch and the module
-preparation script. When any of these change, regenerate the list from a module
-build and rebuild the app:
+compile flags (`ps5/module/compile-flags.txt`), the toolchain pins, the module
+preparation script and the contents of the SDK headers the module includes
+(`ps5/module/abi-headers.txt`). Runtime changes outside those headers keep
+players' modules valid. When any of these change, regenerate the lists from a
+module build and rebuild the app:
 
 ```sh
 python3 ps5/tools/build-game-module.py --write-imports \
@@ -51,9 +53,10 @@ A module built for a different ABI is refused at startup.
 
 ## SDK patch
 
-Edits to the SDK under `upstream/` are not tracked; export them into
-`ps5/patches/rexglue-ps5.patch` as the difference from the pinned SDK plus the
-six upstream patches, and check that it applies to a fresh checkout.
+Edits to the SDK under `upstream/` are not tracked. `python3 tools/export-ps5-patch.py`
+writes them into `ps5/patches/rexglue-ps5.patch` as the difference from the
+pinned SDK plus the six upstream patches, after checking that the result
+applies to a fresh checkout.
 
 ## Linux profiling harness
 
