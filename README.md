@@ -7,7 +7,7 @@ Title ID `PPSA99680`, tested on firmware 9.00.
 
 **Status:** playable. Picture, audio, controls, saves and reloads have been
 confirmed on console. The open world now uses the game's own 60 FPS mode; the
-village currently runs at roughly 25–50 FPS with game speed kept correct. See
+village currently runs at roughly 30–50 FPS with game speed kept correct. See
 [`ps5/CURRENT_STATUS.md`](ps5/CURRENT_STATUS.md) for measurements and open work.
 
 This repository contains only port code, build tooling and patches. Game files,

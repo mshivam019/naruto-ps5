@@ -1,6 +1,7 @@
 # Naruto PS5 — current status
 
-Updated October 15, 2026, after the v5 console test (user: "much better now").
+Updated October 15, 2026, after the v6 console test (user: graphics correct,
+"this one feels better"). Next step: release preparation, after user approval.
 This document supersedes older candidate/status statements in PLAN.md.
 
 ## Current state and user instructions
@@ -9,8 +10,8 @@ This document supersedes older candidate/status statements in PLAN.md.
   normal game speed, Start, movement, audio, save creation and PlayerSave1 reload.
 - Title **Naruto: Rise of a Ninja / PPSA99680**, firmware9.00.
   Installed at `/mnt/ext1/etaHEN/games/PPSA99680`.
-- Latest live check: Naruto not running after the second-build startup check.
-  Recheck IDs before acting.
+- Latest live check: Naruto v6 running (PID 107) after the user test. Recheck
+  IDs before acting.
 - User explicitly said **do not roll back** after the descriptor-fast regression.
   No rollback occurred. The latest build is a forward fix retaining the previous
   optimizations. Closing/restarting Naruto for testing is authorized, but preserve
@@ -42,12 +43,28 @@ This document supersedes older candidate/status statements in PLAN.md.
   requested access are skipped and consecutive backed pages change with one
   `sceKernelMprotect` call instead of one per 16 KB page. Memory host test passes
   (`ps5/tools/test-memory.sh`; rollback case now fails the single run call).
-- **`clear_memory_page_state` stays true (SDK default).** Setting it false (the
-  Xenia Canary default) produced missing/flickering geometry and sky streaks on
-  PS5 (user recording `evidence/recordings/20261014_210338.webm`), although the
-  Linux harness looked correct. Likely some guest writes reach shared memory
-  without a write-watch fault on PS5. User confirmed the issues gone after
-  restoring true. Do not disable it without fixing that first.
+- **16 KB host-page write watches** (`src/system/xmemory.cpp`,
+  `PhysicalHeap::IsSystemPageGuestWritable`). PS5 host pages are 16 KB while
+  guest pages are 4 KB. `EnableAccessCallbacks` and `TriggerCallbacks` checked
+  only the first guest page of each host page, so a host page whose first 4 KB
+  was read-only or uncommitted was never write-protected and guest writes to
+  the rest went unnoticed. They now consider every committed guest page in the
+  host page. This caused the stale/flickering geometry seen with
+  `clear_memory_page_state=false` (user recording
+  `evidence/recordings/20261014_210338.webm`).
+- **`clear_memory_page_state = false`** is the packaged default again
+  (`ps5/config/narutorise.toml`, also written to the console). User confirmed
+  correct graphics with v6. Setting it true restores the old every-frame
+  re-upload if anything goes stale.
+- **Missed-write verifier** (cvar `shared_memory_verify_valid_pages`, off by
+  default; debug only, costs most of the frame rate). With the fix it still
+  reported a few pages (`0x14630000`, `0x13174000`, `0x132B0000`) changing every
+  frame, probably host-side writes through the physical view (CP/XMA), with no
+  visible effect (`evidence/fps60-v6-startup-runtime.log`).
+- **Async Vulkan submission** (cvar `vulkan_async_submission`, default on):
+  non-swap submissions are replayed and submitted on a worker thread; swaps and
+  blocking fence waits drain it first. Linux harness A/B: 35.0/35.4 vs
+  27.8/33.7 requests/s with it off.
 - **Stage timing:** PS5 logs now also report primitives, vertex buffers,
   viewport, system constants and command-processor stall time per 5 seconds.
   Sampled stage values look inflated on PS5 (viewport and system constants both
@@ -65,28 +82,31 @@ v5 (coalesced page protection) at the same area, user-reported "much better":
 menus 60/s; village 24.4–49.4 requests/s over the last 10 intervals, with 0–2
 gaps over 50 ms per 5 s (v4: 10–48 per 5 s). About 7,500 draws per frame; the
 command processor is still saturated, so 60 is not reached in the village
-(`evidence/fps60-v5-user-runtime.log`). Next candidates: move deferred
-command-buffer replay and queue submission (about 0.9 s per 5 s) to a worker
-thread, and reduce shared-memory/texture watch work.
+(`evidence/fps60-v5-user-runtime.log`).
 
-Private Linux harness (`.scratch/host-linux`, never published) reproduces the
-village on the laptop's RADV: 32.1 → 45.2 requests/s on a fixed idle view after
-these changes.
+v6 (16 KB watch fix, no per-frame page reset, async submission), user: graphics
+correct, "this one feels better": village 29.8–50.0 requests/s with **no gaps
+over 50 ms** in 13 consecutive 5 s intervals (`evidence/fps60-v6-user-runtime.log`).
+The command processor is still the limit; 60 is not reached in the village.
+
+The Linux harness (`tools/host-harness`) reproduces the village on the laptop's
+RADV: 32.1 → 45.2 requests/s on a fixed idle view after the first passes.
 
 ## Installed candidate
 
-**v5: 60 FPS, loader-thread fix, page-state clearing restored, coalesced page
-protection**, 89,855,053 bytes:
+**v6: 60 FPS, loader-thread fix, 16 KB write-watch fix, coalesced page
+protection, async submission**, 89,887,133 bytes:
 
 ```text
-858b78d01360828bfbf593bd5397e7850debd10a0fe1e41508826afb183d7f1d
+de0d64d02800a0214b3587ebd488717326073f46375625f95ce5dd1ee466a6be
 ```
 
-Deployment raw readback matched (`evidence/fps60-v5-deployed.json`). Each
-deployment kept the previous executable as `eboot.bin.before-fps60-v5` (v4),
-`-v4` (v3 loader fix), `-v3`, `-v2e`, `-v2d` (diagnostic builds), `-v2` (first
-60 FPS build) and `eboot.bin.before-fps60` (targeted texture invalidation).
-`dist/PPSA99680` was not repackaged. No saves/configuration were replaced.
+Deployment raw readback matched (`evidence/fps60-v6-deployed.json`). Console
+config `user/narutorise.toml` equals `ps5/config/narutorise.toml`; its previous
+copy is `user/narutorise.toml.before-v6`. Each deployment kept the previous
+executable as `eboot.bin.before-fps60-v6` (v5), `-v5`, `-v4`, `-v3`, `-v2e`,
+`-v2d`, `-v2` and `eboot.bin.before-fps60` (targeted texture invalidation).
+`dist/PPSA99680` was not repackaged. Saves were not touched.
 
 **Startup crash fixed** (`ps5/app/loader_thread.cpp`). About 18 seconds after
 boot, when `ai2c.dll` loads, the game crashed with `Call to invalid or
@@ -177,7 +197,7 @@ Retained optimizations:
 ## Source, build and verification
 
 - Project: the 60 FPS work and the earlier performance changes are committed
-  locally as `db40781` on top of `9ef3cd1` (not pushed).
+  on `main` and pushed to the private GitHub repository.
 - Game pin:`226af94268de3660c3de24061f9a6bf7ae982d3c`.
 - SDK pin:`c94f5ebdcb3c9d1a460ca48e04f9758448f8d518`.
 - Ignored nested SDK edits are exported into `ps5/patches/rexglue-ps5.patch`

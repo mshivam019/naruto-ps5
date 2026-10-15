@@ -433,3 +433,16 @@ User requested 60 FPS. Current details are in `ps5/CURRENT_STATUS.md` (sections
   new invalid-call diagnostics in `function_dispatcher.cpp`.
 - SDK patch re-exported and checked against a fresh pinned SDK with the six
   upstream patches. Console gameplay check of the current build is pending.
+
+## October 15: v6 (three follow-up fixes)
+
+- Root cause of the stale geometry with `clear_memory_page_state=false`: PS5
+  16 KB host pages hold four 4 KB guest pages, and the physical heap's write
+  watches looked only at the first guest page. Fixed in `xmemory.cpp`; found with
+  the new `shared_memory_verify_valid_pages` debug check. The page reset is off
+  again by default (`ps5/config/narutorise.toml`).
+- Non-swap Vulkan submissions are replayed and submitted on a worker thread
+  (`vulkan_async_submission`).
+- Console v6: graphics confirmed correct by the user, village 30–50 requests/s
+  with no gaps over 50 ms; user: "this one feels better". Release preparation is
+  next, pending user approval.

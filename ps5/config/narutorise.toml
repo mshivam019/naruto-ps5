@@ -6,3 +6,8 @@ log_flush_interval = 1
 
 # Keep adjacent guest command buffers in one submission until required synchronization.
 vulkan_submit_on_primary_buffer_end = false
+
+# Keep CPU-uploaded GPU pages valid across frames; guest writes invalidate them
+# through write watches (16 KB host pages are watched when any guest page in
+# them is writable). Set true to re-upload every frame if graphics go stale.
+clear_memory_page_state = false
