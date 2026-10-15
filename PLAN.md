@@ -454,3 +454,14 @@ than the unlocked 30–50. Console log `evidence/steady30-user-runtime.log`:
 30.0 requests/s, max frame gap 35 ms outside loading. `naruto_fps60 = false` is
 now the packaged default (battles and menus remain 60). Frame generation work
 is on hold at the user's request.
+
+## October 15: release structure
+
+The PS5 executable contained recompiled game code, so it could not be
+published. Following the Link's Awakening port, the app is now runtime-only and
+loads `game/naruto.module`, which `ps5/tools/setup.py` builds from the player's
+own ISO (Python XDVDFS extractor, hash check of default.xex and ai2c.dll, pinned
+ReXGlue code generator, pinned llvm-mingw and payload SDK headers). Code
+generation is deterministic (only dependency-file paths differ). Release
+packaging: `package-title.py`, `package-setup.py`, `package-sources.py`; see
+`ps5/RELEASING.md`. Project license: MIT.
