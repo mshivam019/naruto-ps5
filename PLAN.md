@@ -446,3 +446,11 @@ User requested 60 FPS. Current details are in `ps5/CURRENT_STATUS.md` (sections
 - Console v6: graphics confirmed correct by the user, village 30–50 requests/s
   with no gaps over 50 ms; user: "this one feels better". Release preparation is
   next, pending user approval.
+
+## October 15: steady 30 default
+
+User compared modes: the game's own steady 30 in the open world felt better
+than the unlocked 30–50. Console log `evidence/steady30-user-runtime.log`:
+30.0 requests/s, max frame gap 35 ms outside loading. `naruto_fps60 = false` is
+now the packaged default (battles and menus remain 60). Frame generation work
+is on hold at the user's request.
