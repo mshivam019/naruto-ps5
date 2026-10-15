@@ -1,10 +1,12 @@
 # Naruto: Rise of a Ninja PS5 workspace
 
-Read `ps5/CURRENT_STATUS.md` first (current build, measurements, open work),
-then `PLAN.md` for history and `../AGENTS.md` for shared console instructions.
+`main` is the stable release line. Development notes (`ps5/CURRENT_STATUS.md`,
+`PLAN.md`) and the experimental 60 FPS work live on branch `experimental-60fps`;
+read them there before performance work. Shared console instructions are in
+`../AGENTS.md`. Release steps: `ps5/RELEASING.md`.
 
-The port is playable on PPSA99680 (firmware 9.00); main keeps the original 30/60 FPS split and
-experimental 60 FPS work lives on branch `experimental-60fps`. User
+The port is playable on PPSA99680 (firmware 9.00). The app is runtime-only and
+loads `game/naruto.module`, built by `ps5/tools/setup.py` from the player's disc. User
 data, saves and caches live in `/app0/user` on the console; preserve them.
 
 Keep source modifications, build outputs and receipts isolated in this folder.

@@ -56,8 +56,7 @@ at startup and binds to its runtime (`ps5/module/`). Port-specific changes:
 - **Save-file pictures** (`ps5/app/save_picture.cpp`): the 320×180 picture the
   game captures when saving is read back from the GPU.
 
-[`ps5/CURRENT_STATUS.md`](ps5/CURRENT_STATUS.md) records measurements and known
-issues; [`PLAN.md`](PLAN.md) is the development log.
+Development notes and measurements are kept on the `experimental-60fps` branch.
 
 ## Repository layout
 

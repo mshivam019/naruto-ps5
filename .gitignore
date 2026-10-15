@@ -13,3 +13,4 @@ private/
 .scratch/
 __pycache__/
 evidence/
+release-candidate/
