@@ -22,6 +22,12 @@ inner="$out/inner.sh"
   echo
 } > "$inner"
 chmod +x "$inner"
+marker=$(mktemp)
 timeout --kill-after=10 "$seconds" kwin_wayland --virtual --no-lockscreen \
   --socket "naruto-harness-$tag" --width 1280 --height 720 -- "$inner" > "$out/stdout.log" 2>&1
-echo "exit=$?"
+status=$?
+# A killed runtime leaves its guest memory file behind; it fills /dev/shm and
+# later runs fail with SIGBUS. Remove the files this run created.
+find /dev/shm -maxdepth 1 -name 'xenia_memory_*' -user "$(id -u)" -newer "$marker" -delete
+rm -f "$marker"
+echo "exit=$status"
