@@ -1,4 +1,8 @@
-# Naruto: Rise of a Ninja — native PS5 port
+# Naruto: Rise of a Ninja — native PS5 port (experimental 60 FPS branch)
+
+> **Work in progress.** This branch requests 60 FPS in the open world. The PS5
+> currently reaches about 30–50 FPS in the village, so motion is uneven; the
+> stable port on `main` keeps the original 30 FPS there.
 
 Native PS5 build of *Naruto: Rise of a Ninja* (Xbox 360, title `555307E5`) using
 the [naruto-rise-recomp](https://github.com/jorjbarbosa/naruto-rise-recomp)
