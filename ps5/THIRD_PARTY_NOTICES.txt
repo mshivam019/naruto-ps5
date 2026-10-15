@@ -1,12 +1,32 @@
-Native platform.c/platform.h and native title link recipe derive from Mihawk's
-PS5 Vulkan Template (Copyright 2026 Mihawk, MIT). Controller SDL bridge reused
-from the local Wind-Waker-HD-PS5/Dusklight ports.
+Naruto: Rise of a Ninja for PS5 — third-party notices
 
-ReXGlue and its Xenia-derived components retain their upstream BSD notices.
-The Naruto game-port upstream currently declares no root license; it is fetched
-locally at a pinned revision, not vendored into this repository.
+Project code: MIT (licenses/Naruto-PS5-MIT.txt).
 
-SDL3: zlib. Mesa/RADV: MIT and per-file licenses. PS5 PayloadSDK/platform:
-GPL-3.0-or-later with per-file exceptions. LLVM runtime: Apache-2.0 with LLVM
-exceptions. Preserve original dependency licenses and corresponding sources
-before any distribution. No compiled dependencies or game content are committed.
+The app (eboot.bin) contains:
+- ReXGlue SDK runtime and Xenos GPU backend, including Xenia-derived code:
+  BSD 3-Clause (licenses/ReXGlue-BSD-3-Clause.txt). Modified for PS5; the
+  changes are ps5/patches/rexglue-ps5.patch in the source repository.
+- fmt, spdlog, Dear ImGui, o1heap, SIMDe, toml++, Vulkan Memory Allocator: MIT.
+- xxHash: BSD 2-Clause. aes_128: see licenses/aes_128.txt.
+- glslang: BSD 3-Clause / Apache-2.0 and others (licenses/glslang.txt).
+- libmspack: LGPL-2.1 (licenses/libmspack-LGPL-2.1.txt).
+- FFmpeg (configured decoder subset): LGPL-2.1-or-later (licenses/FFmpeg-*).
+- SDL3: zlib (licenses/SDL.txt).
+- Mesa RADV Vulkan driver: MIT and per-file licenses (licenses/Mesa.txt).
+- LLVM libc++/libc++abi/libunwind: Apache-2.0 WITH LLVM-exception (licenses/LLVM.txt).
+- PS5 payload SDK and platform layer: GPL-3.0-or-later with per-file
+  exceptions (licenses/PS5-SDK.txt).
+- PS5 Vulkan and its template (native display, link recipe, platform.c,
+  libc.prx): licenses/PS5-Vulkan.txt and licenses/PS5-Vulkan-Template-MIT.md.
+
+Each release includes a dependency source archive with the exact source of
+these components, including local modifications.
+
+Setup, on the player's computer, downloads and uses: the Naruto: Rise of a
+Ninja PC recompilation (jorjbarbosa/naruto-rise-recomp, no declared license;
+used for its code-generation configuration and not redistributed), the ReXGlue
+SDK, llvm-mingw (LLVM) and the PS5 payload SDK headers.
+
+Naruto: Rise of a Ninja and its content belong to their owners. This project
+includes no game data. The app icon and backgrounds are original typographic
+designs set in DejaVu Sans.

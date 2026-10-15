@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile private game/app objects independently while runtime porting continues."""
+"""Compile the native app objects."""
 import argparse
 import json
 import os
@@ -21,9 +21,9 @@ subprocess.run(['cmake', '-S', str(ROOT / 'ps5/runtime'), '-B', str(build), '-G'
                 '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON'], check=True, env=env)
 rows = json.loads((build / 'compile_commands.json').read_text())
 targets = [str(Path(row['output']).relative_to(build)) for row in rows
-           if '/app/CMakeFiles/naruto_' in row['output']]
+           if '/app/CMakeFiles/naruto_app.dir/' in row['output']]
 if not targets:
-    raise SystemExit('No native game/app compile targets found')
-print(f'Compiling {len(targets)} private game/app objects', flush=True)
+    raise SystemExit('No native app compile targets found')
+print(f'Compiling {len(targets)} app objects', flush=True)
 result = subprocess.run(['ninja', '-C', str(build), '-j', str(args.jobs), *targets], env=env)
 raise SystemExit(result.returncode)

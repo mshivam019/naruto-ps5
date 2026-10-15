@@ -6,8 +6,9 @@ desktop with Vulkan. It reproduces the PS5 command-processor workload on a
 desktop RADV GPU so changes can be profiled and checked before a console test.
 Builds contain recompiled game code: never publish them.
 
-Requirements: generated code in `private/codegen/generated`, the game in
-`private/game_root`, clang, lld, ninja, `kwin_wayland` (headless nested
+Requirements: run `ps5/tools/setup.py` once (it leaves the generated code in
+`build/setup/codegen/generated` and the extracted disc in `build/setup/game`;
+`NARUTO_GAME` overrides the game folder), clang, lld, ninja, `kwin_wayland` (headless nested
 compositor) and optionally `perf`.
 
 ```sh

@@ -1,7 +1,6 @@
 {
   "naruto": "226af94268de3660c3de24061f9a6bf7ae982d3c",
   "sdk": "c94f5ebdcb3c9d1a460ca48e04f9758448f8d518",
-  "extract_xiso": "3f5b62cfe68f000b0e3c8a30104973f3a297948e",
   "patches": {
     "codegen-alt-version-dll-modules.patch": "c95d22241df27003de131ab416502283edf3e851973274c85d49413443873919",
     "guest-frame-stats.patch": "3110937ca703394a6d7e69899d78e1d1f687c8432dfa82bdf0490fcc4c6629b5",

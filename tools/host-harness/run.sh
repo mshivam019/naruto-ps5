@@ -9,7 +9,7 @@ build=${NARUTO_HARNESS_BUILD:-$root/build/host-harness}
 bin="$build/${HARNESS_OUT:-out}"
 tag=$1; seconds=$2; shift 2
 out="$build/run/$tag"; mkdir -p "$out" "$build/run/user"
-game=$(realpath "$root/private/game_root")
+game=$(realpath "${NARUTO_GAME:-$root/build/setup/game}")
 inner="$out/inner.sh"
 {
   echo '#!/usr/bin/env bash'

@@ -1,6 +1,6 @@
 // Native startup follows the platform contract used by the working PS5 ports.
 #include "native/platform.h"
-#include "narutorise_init.h"
+#include "../module/game_module.h"
 #include <SDL3/SDL.h>
 #include <rex/cvar.h>
 #include <rex/chrono/clock.h>
@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <exception>
 #include <memory>
+#include <string>
 #include <sys/stat.h>
 
 extern "C" void ps5_input_initialize();
@@ -32,13 +33,14 @@ extern "C" [[noreturn]] void __wrap_abort() {
 class NarutoPS5App final : public rex::ReXApp {
 public:
     explicit NarutoPS5App(rex::ui::WindowedAppContext& context)
-        : rex::ReXApp(context, "narutorise", PPCImageConfig) {}
+        : rex::ReXApp(context, "narutorise", naruto_module::MainImage()) {}
     void OnConfigurePaths(rex::PathConfig& paths) override {
         paths.game_data_root = "/app0/game";
         paths.user_data_root = "/app0/user";
         paths.cache_root = "/app0/user/cache";
         paths.metadata_root = "/app0/metadata";
-        paths.config_path = "/app0/user/narutorise.toml";
+        // Shipped with the app (replaced on update); saves and caches stay in user/.
+        paths.config_path = "/app0/narutorise.toml";
         paths.update_data_root.clear();
     }
 };
@@ -80,6 +82,15 @@ static bool check_fibers() {
 int main() {
     platform_init("Naruto: Rise of a Ninja");
     if (!check_fibers()) return 1;
+    // The game code is a private module prepared by the desktop setup; load it
+    // before anything else, as static initialization would have run.
+    {
+        std::string error;
+        if (!naruto_module::Load(naruto_module::kPath, error)) {
+            say("Naruto game module not loaded: %s", error.c_str());
+            return 1;
+        }
+    }
     timespec clock_resolution{};
     clock_getres(CLOCK_MONOTONIC, &clock_resolution);
     const auto tick_start = rex::chrono::Clock::host_tick_count_platform();

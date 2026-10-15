@@ -1,10 +1,11 @@
-// The first private test title links the base-game engine module statically.
-#include <rex/image_info.h>
-#include <rex/system/function_dispatcher.h>
+// The engine's ai2c.dll module is part of the private game module; the runtime
+// asks for it by name when the game loads the DLL.
 #include <cstring>
 
-extern "C" void NarutoAI2C_Register(rex::runtime::IModuleRegistrar*);
-extern "C" const rex::PPCImageInfo* NarutoAI2C_GetImageInfo();
+#include <rex/image_info.h>
+#include <rex/system/function_dispatcher.h>
+
+#include "../module/game_module.h"
 
 extern "C" bool rex_ps5_resolve_builtin_module(
     const char* name,
@@ -14,7 +15,7 @@ extern "C" bool rex_ps5_resolve_builtin_module(
     *register_fn = nullptr;
     *image_info_fn = nullptr;
     if (std::strcmp(name, "narutorise_AI2C") != 0) return false;
-    *register_fn = NarutoAI2C_Register;
-    *image_info_fn = NarutoAI2C_GetImageInfo;
-    return true;
+    *register_fn = naruto_module::Ai2cRegister();
+    *image_info_fn = naruto_module::Ai2cImageInfo();
+    return *register_fn && *image_info_fn;
 }

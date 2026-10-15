@@ -8,7 +8,6 @@ ROOT = Path(__file__).resolve().parent.parent
 PINS = json.loads((ROOT / 'sources.json').read_text())
 for directory, url, revision in (
     ('naruto-rise-recomp', 'https://github.com/jorjbarbosa/naruto-rise-recomp', PINS['naruto']),
-    ('extract-xiso', 'https://github.com/XboxDev/extract-xiso', PINS['extract_xiso']),
 ):
     path = ROOT / 'upstream' / directory
     if not path.exists():

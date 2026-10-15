@@ -14,7 +14,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 get_filename_component(ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
 set(SDK "${ROOT}/upstream/naruto-rise-recomp/sdk")
 set(APP_SRC "${ROOT}/upstream/naruto-rise-recomp/app/src")
-set(GENERATED "${ROOT}/private/codegen/generated" CACHE PATH "Private codegen output")
+set(GENERATED "${ROOT}/build/setup/codegen/generated" CACHE PATH "Generated code from ps5/tools/setup.py")
 
 set(REXGLUE_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 set(REXGLUE_ENABLE_TRACY OFF CACHE BOOL "" FORCE)

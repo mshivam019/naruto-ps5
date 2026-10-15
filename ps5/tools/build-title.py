@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and sign the private native Naruto test executable (never publish it)."""
+"""Build and sign the native Naruto app (runtime only; game code is a separate private module)."""
 import argparse
 import json
 import os
@@ -25,7 +25,7 @@ if not args.link_only:
 build = ROOT / 'build/ps5-game'
 rows = json.loads((build / 'compile_commands.json').read_text())
 archives = []
-for name in ('naruto_default', 'naruto_ai2c', 'naruto_app'):
+for name in ('naruto_app',):
     objects = [Path(row['output']) for row in rows
                if f'/app/CMakeFiles/{name}.dir/' in row['output'] and row['output'].endswith('.o')]
     if not objects or any(not obj.is_file() for obj in objects):
@@ -51,4 +51,4 @@ if any(not p.is_file() for p in dependencies):
 run('bash', ROOT / 'ps5/tools/link-title.sh', ROOT / 'build/native-title',
     ROOT.parent / 'PS5_Vulkan', sdk, '--whole-archive', *archives, *required,
     '--no-whole-archive', '--start-group', *dependencies, '--end-group')
-print('Private executable:', ROOT / 'build/native-title/eboot.bin')
+print('App executable:', ROOT / 'build/native-title/eboot.bin')
