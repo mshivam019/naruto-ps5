@@ -6,9 +6,11 @@ static recompilation and the ReXGlue SDK, rendered with Vulkan through RADV.
 Title ID `PPSA99680`, tested on firmware 9.00.
 
 **Status:** playable. Picture, audio, controls, saves and reloads have been
-confirmed on console. The open world now uses the game's own 60 FPS mode; the
-village defaults to the game's steady 30 FPS (unlocked it reaches about 30–50 FPS; set `naruto_fps60 = true`). See
-[`ps5/CURRENT_STATUS.md`](ps5/CURRENT_STATUS.md) for measurements and open work.
+confirmed on console. The open world runs at the game's own steady 30 FPS by
+default, with battles and menus at 60. Setting `naruto_fps60 = true` requests
+60 everywhere with game speed kept correct; the village then reaches about
+30–50 FPS. See [`ps5/CURRENT_STATUS.md`](ps5/CURRENT_STATUS.md) for
+measurements and open work.
 
 This repository contains only port code, build tooling and patches. Game files,
 generated C++, executables and packaged titles are excluded: the PS5 executable
