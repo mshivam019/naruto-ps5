@@ -3,7 +3,7 @@
 
 Extracts the disc image, generates and compiles the game code into the private
 game module, and writes a PPSA99680/game folder to copy into the installed app.
-Linux x86-64 (Windows: run it inside WSL2). The output contains your game data
+Linux x86-64 or native Windows x64 (Python 3.11+ and Git). The output contains your game data
 and code generated from it: never share it."""
 import argparse
 import hashlib
@@ -20,6 +20,7 @@ import urllib.request
 import zipfile
 
 from ps5_x360 import finish_setup, interactive_build
+from native_setup import windows_tools, unpack_zip, fetch_forza, check_windows_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
 PINS = json.loads((ROOT / 'sources.json').read_text())
@@ -61,12 +62,13 @@ def fetch_sources():
     source = ROOT / 'upstream/naruto-rise-recomp'
     if not source.exists():
         step('Downloading the pinned Naruto PC port and ReXGlue SDK source...')
-        run('git', 'clone', '--filter=blob:none', 'https://github.com/jorjbarbosa/naruto-rise-recomp', source)
+        run('git', '-c', 'core.autocrlf=false', 'clone', '--filter=blob:none', 'https://github.com/jorjbarbosa/naruto-rise-recomp', source)
+        run('git', '-C', source, 'config', 'core.autocrlf', 'false')
         run('git', '-C', source, 'checkout', '--detach', PINS['naruto'])
     actual = subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip()
     if actual != PINS['naruto']:
         raise ValueError(f'upstream/naruto-rise-recomp is at {actual}, expected {PINS["naruto"]}')
-    run('git', '-C', source, 'submodule', 'update', '--init', '--recursive')
+    run('git', '-c', 'core.autocrlf=false', '-C', source, 'submodule', 'update', '--init', '--recursive')
     sdk = source / 'sdk'
     if subprocess.check_output(['git', '-C', str(sdk), 'rev-parse', 'HEAD'], text=True).strip() != PINS['sdk']:
         raise ValueError('Unexpected ReXGlue SDK revision')
@@ -84,6 +86,8 @@ def fetch_sources():
 
 
 def build_codegen_tool(source, jobs):
+    if platform.system() == 'Windows':
+        return windows_tools(ROOT, BUILD / 'windows-tools', download)[0]
     tool = BUILD / 'host/rexglue'
     if tool.is_file():
         return tool
@@ -170,13 +174,14 @@ def prepare_toolchain():
     cache = BUILD / 'tools'
     cache.mkdir(parents=True, exist_ok=True)
     compiler = cache / TOOLS['compiler']['directory'] / 'bin'
-    if not (compiler / 'clang++').is_file():
+    if platform.system() == 'Windows':
+        compiler = windows_tools(ROOT, BUILD / 'windows-tools', download)[1]
+    elif not (compiler / 'clang++').is_file():
         with tarfile.open(download(TOOLS['compiler'], cache)) as archive:
             archive.extractall(cache, filter='data')
     sysroot = cache / TOOLS['sysroot']['directory']
     if not (sysroot / 'target/include/c++/v1').is_dir():
-        with zipfile.ZipFile(download(TOOLS['sysroot'], cache)) as archive:
-            archive.extractall(cache)
+        unpack_zip(download(TOOLS['sysroot'], cache), cache)
     return compiler, sysroot
 
 
@@ -201,13 +206,18 @@ def main():
             print('Cancelled. No build started.')
             return
     args = parser.parse_args(argv)
-    if platform.system() != 'Linux' or platform.machine().lower() not in ('x86_64', 'amd64'):
-        parser.error('Setup runs on Linux x86-64; on Windows, run it inside WSL2')
+    if platform.system() not in ('Linux', 'Windows') or platform.machine().lower() not in ('x86_64', 'amd64'):
+        parser.error('ISO setup supports Linux x86-64 and native Windows x64')
     if sys.version_info < (3, 11):
         parser.error('Python 3.11 or newer is required')
-    for command in ('git', 'cmake', 'ninja', 'clang', 'clang++'):
+    if sys.maxsize < 2**32:
+        parser.error('Install 64-bit Python to run the native x64 tools')
+    commands = ('git',) if platform.system() == 'Windows' else ('git', 'cmake', 'ninja', 'clang', 'clang++')
+    for command in commands:
         if not shutil.which(command):
             parser.error(f'Missing required command: {command}')
+    if platform.system() == 'Windows':
+        check_windows_runtime()
     if args.jobs < 1:
         parser.error('--jobs must be positive')
     if args.iso and not args.iso.is_file():
