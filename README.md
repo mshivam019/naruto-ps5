@@ -10,7 +10,7 @@ your own **Naruto: Rise of a Ninja** Xbox 360 disc image (USA/Europe release).
 Game files, generated game code and saves are not distributed with this project.
 
 [Releases](https://github.com/mshivam019/naruto-ps5/releases) ·
-[Install](ps5/SETUP.md) · [Build from source](ps5/BUILD.md)
+[Install](INSTALL.md) · [Build from source](ps5/BUILD.md)
 
 ## Features
 
@@ -28,13 +28,15 @@ branch.
 
 ## Install
 
-1. Install **PPSA99680.zip** with your native-title launcher or PS5 Upload.
-2. On a Linux computer (Windows: WSL2), extract the matching setup ZIP and run
-   `sh setup.sh --iso "/path/to/Naruto - Rise of a Ninja.iso"`.
-3. Copy the `game` folder setup creates into `/mnt/ext1/etaHEN/games/PPSA99680/`.
-4. Launch **Naruto: Rise of a Ninja** from the home screen.
+Use the matching app ZIP and **setup v1.2.0** from the private v0.1.0 release.
+Run `sh setup.sh` to choose an ISO and output folder (Linux or Windows WSL2).
+Already have a prepared game folder? Run `Prepare-Game-Files-Windows.cmd` or
+`sh prepare-game-files.sh` to reuse it without compiling.
 
-[`ps5/SETUP.md`](ps5/SETUP.md) has the requirements, layout and controls.
+The result is a checked `PPSA99680` folder you can copy using any method.
+Validation and optional FTP transfer are separate commands. No M.2 drive,
+PS5 Upload or wired connection is required. See [INSTALL.md](INSTALL.md)
+for the full-folder option, requirements and save-preserving update instructions.
 
 ## How it works
 
